@@ -38,7 +38,7 @@ class AuthController extends Controller
 
     public function loginPost(Request $request){
         $request->validate([
-            'email' => 'required|string|email|unique:users',
+            'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
         
@@ -52,5 +52,10 @@ class AuthController extends Controller
         }
         
         return back()->with('error', 'Email or Password salah');
+    }
+
+    public function logout(){
+        Auth::logout();
+        return redirect()->route('login');
     }
 }

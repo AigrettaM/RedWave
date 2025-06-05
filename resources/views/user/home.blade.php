@@ -1,3 +1,11 @@
 <h1>
-    Halo ini tampilan user
+    Halo, {{ Auth::user()->name }}
 </h1>
+
+<form method="POST" action="{{ route('logout') }}">
+@csrf
+@method('DELETE')
+<button class="btn btn-danger" type="submit">
+    Logout
+</button>
+</form>

@@ -12,7 +12,6 @@
                 <div class="max-w-md w-full">
                     <div>
                         @if (Session::has('error'))
-                            <!-- Menampilkan pesan error dengan desain seperti yang diinginkan -->
                             <div id="error-message" class="bg-pink-100 border-l-4 border-red-500 text-gray-800 p-3 mb-4 rounded-md w-full">
                                 <p class="text-sm">{{ Session::get('error') }}</p>
                             </div>
