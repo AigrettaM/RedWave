@@ -23,7 +23,7 @@
                 </li>
 
                 <li>
-                    <a href="{{ route(donor.index) }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('analytics') ? 'bg-red-700' : '' }}">
+                    <a href="{{ route('donor.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('analytics') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-chart-bar mr-3"></i>
                         Data Donor
                     </a>
