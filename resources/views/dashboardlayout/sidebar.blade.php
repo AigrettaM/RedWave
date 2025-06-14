@@ -63,14 +63,14 @@
                 </li>
 
                 <li>
-                    <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
+                    <a href="/donor" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-shopping-bag mr-3"></i>
                         Donor
                     </a>
                 </li>
 
                 <li>
-                    <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.history') ? 'bg-red-700' : '' }}">
+                    <a href="/donor/history" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.history') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-history mr-3"></i>
                         Riwayat Donor
                     </a>
