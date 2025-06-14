@@ -80,10 +80,10 @@ class ProfileController extends Controller
     {
         try {
             $profiles = Profile::orderBy('created_at', 'desc')->get();
-            return view('admin.data-user', compact('profiles'));
+            return view('admin.user.data-user', compact('profiles'));
         } catch (\Exception $e) {
             Log::error('Error fetching profiles: ' . $e->getMessage());
-            return view('admin.data-user', ['profiles' => collect()]);
+            return view('admin.user.data-user', ['profiles' => collect()]);
         }
     }
 
