@@ -89,10 +89,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Donor Management
     Route::prefix('donors')->name('donors.')->group(function () {
+        Route::get('/export/data', [DonorController::class, 'adminExport'])->name('export');
         Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
         Route::get('/{donor}', [DonorController::class, 'adminShow'])->name('show');
         Route::put('/{donor}/status', [DonorController::class, 'adminUpdateStatus'])->name('status');
         Route::post('/{donor}/complete', [DonorController::class, 'adminComplete'])->name('complete');
-        Route::get('/export/data', [DonorController::class, 'adminExport'])->name('export');
     });
 });

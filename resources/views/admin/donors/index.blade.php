@@ -13,11 +13,10 @@
                 <p class="text-gray-600">Kelola semua data donor darah</p>
             </div>
             <div class="mt-4 md:mt-0 flex gap-2">
-                <button onclick="exportData()" 
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                <a href="{{ route('admin.donors.export') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center">
                     <i class="fas fa-download mr-2"></i>
                     Export Excel
-                </button>
+                </a>
                 <button onclick="refreshData()" 
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                     <i class="fas fa-sync-alt mr-2"></i>

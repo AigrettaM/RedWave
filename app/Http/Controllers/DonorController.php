@@ -587,64 +587,80 @@ class DonorController extends Controller
     /**
      * Admin - Export donors data
      */
-    public function adminExport()
-    {
-        if (auth()->user()->role !== 'admin') {
-            return redirect()->back()->with('error', 'Akses ditolak');
-        }
-
-        try {
-            $donors = Donor::with('user')->get();
-            
-            $filename = 'donor_data_' . date('Y-m-d_H-i-s') . '.csv';
-            
-            $headers = [
-                'Content-Type' => 'text/csv',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            ];
-            
-            $callback = function() use ($donors) {
-                $file = fopen('php://output', 'w');
-                
-                // Header CSV
-                fputcsv($file, [
-                    'Kode Donor',
-                    'Nama',
-                    'Email',
-                    'Status',
-                    'Layak',
-                    'Tanggal Daftar',
-                    'Tanggal Donor',
-                    'Donor Berikutnya',
-                    'Catatan',
-                    'Alasan Penolakan'
-                ]);
-                
-                // Data
-                foreach ($donors as $donor) {
-                    fputcsv($file, [
-                        $donor->donor_code,
-                        $donor->user->name,
-                        $donor->user->email,
-                        $donor->status,
-                        $donor->is_eligible ? 'Ya' : 'Tidak',
-                        $donor->created_at->format('d/m/Y H:i'),
-                        $donor->donation_date ? $donor->donation_date->format('d/m/Y') : '',
-                        $donor->next_eligible_date ? $donor->next_eligible_date->format('d/m/Y') : '',
-                        $donor->notes ?? '',
-                        $donor->rejection_reason ?? ''
-                    ]);
-                }
-                
-                fclose($file);
-            };
-            
-            return response()->stream($callback, 200, $headers);
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal mengexport data');
-        }
+    /**
+ * Admin - Export donors data (Alternative)
+ */
+public function adminExport()
+{
+    // Check admin access
+    if (auth()->user()->role !== 'admin') {
+        return redirect()->route('admin.donors.index')
+            ->with('error', 'Akses ditolak');
     }
+
+    try {
+        $donors = Donor::with('user')->get();
+        
+        // Check if there are donors
+        if ($donors->isEmpty()) {
+            return redirect()->route('admin.donors.index')
+                ->with('error', 'Tidak ada data donor untuk diekspor');
+        }
+        
+        $filename = 'donor_data_' . date('Y-m-d_H-i-s') . '.csv';
+        $filePath = storage_path('app/public/exports/' . $filename);
+        
+        // Create directory if not exists
+        if (!file_exists(dirname($filePath))) {
+            mkdir(dirname($filePath), 0755, true);
+        }
+        
+        $file = fopen($filePath, 'w');
+        
+        // Add BOM for UTF-8
+        fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Header CSV
+        fputcsv($file, [
+            'Kode Donor',
+            'Nama',
+            'Email',
+            'Status',
+            'Layak',
+            'Tanggal Daftar',
+            'Tanggal Donor',
+            'Donor Berikutnya',
+            'Catatan',
+            'Alasan Penolakan'
+        ]);
+        
+        // Data
+        foreach ($donors as $donor) {
+            fputcsv($file, [
+                $donor->donor_code ?? '',
+                $donor->user->name ?? '',
+                $donor->user->email ?? '',
+                $donor->status ?? '',
+                $donor->is_eligible ? 'Ya' : 'Tidak',
+                $donor->created_at ? $donor->created_at->format('d/m/Y H:i') : '',
+                $donor->donation_date ? $donor->donation_date->format('d/m/Y') : '',
+                $donor->next_eligible_date ? $donor->next_eligible_date->format('d/m/Y') : '',
+                $donor->notes ?? '',
+                $donor->rejection_reason ?? ''
+            ]);
+        }
+        
+        fclose($file);
+        
+        // Download file
+        return response()->download($filePath)->deleteFileAfterSend(true);
+        
+    } catch (\Exception $e) {
+        return redirect()->route('admin.donors.index')
+            ->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
+    }
+}
+
 
     // ==========================================
     // HELPER METHODS
