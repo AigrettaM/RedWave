@@ -7,6 +7,7 @@ use App\Http\Controllers\DependentDropdownController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DonorController;
 use App\Http\Controllers\BotManController;
+use App\Http\Controllers\ArticleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +19,11 @@ use App\Http\Controllers\BotManController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+Route::get('/article', [ArticleController::class, 'index'])->name('article.index');
+Route::get('/article/{slug}', [ArticleController::class, 'show'])->name('article.show');
+
 
 // Guest routes (belum login)
 Route::group(['middleware' => 'guest'], function () {
