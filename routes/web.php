@@ -6,22 +6,20 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DependentDropdownController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DonorController;
+use App\Http\Controllers\BotManController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
+// Home route
 Route::get('/', function () {
     return view('welcome');
 });
 
+// Guest routes (belum login)
 Route::group(['middleware' => 'guest'], function () {
     Route::get('/register', [AuthController::class,'register'])->name('register');
     Route::post('/register', [AuthController::class,'registerPost'])->name('register');
@@ -29,6 +27,7 @@ Route::group(['middleware' => 'guest'], function () {
     Route::post('/login', [AuthController::class, 'loginPost'])->name('login');
 });
 
+// Authenticated routes (sudah login)
 Route::group(['middleware'=> 'auth'], function () {
     Route::get('/home', [HomeController::class, 'index']);
     Route::delete('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -96,3 +95,26 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{donor}/complete', [DonorController::class, 'adminComplete'])->name('complete');
     });
 });
+// Public routes (bisa diakses semua orang)
+Route::get('/contact', function() {
+    return view('informasi.contact');
+})->name('contact');
+
+// BotMan routes
+Route::get('/botman/iframe', function() {
+    return view('botman.iframe');
+});
+
+Route::post('/botman', function() {
+    $botman = app('botman');
+    
+    // Di sini Anda bisa menambah/edit respons chatbot
+    $botman->hears('kata_kunci', function ($botman) {
+        $botman->reply('Respons Anda');
+    });
+    
+    $botman->listen();
+});
+
+// Ganti route botman yang lama dengan ini:
+Route::post('/botman', [BotManController::class, 'handle']);

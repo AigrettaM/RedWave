@@ -1,8 +1,8 @@
 @extends('layouts.app')
-@section('main-class', 'mt-0 w-full px-0')
+@section('main-class', 'pt-0 w-full px-0') 
 
 @section('content')
-<div class="flex justify-center items-center h-screen bg-gray-100">
+<div class="flex justify-center items-start h-screen bg-gray-100 pt-40">
     <div class="max-w-6xl w-full shadow-lg rounded-lg overflow-hidden">
         <div class="grid grid-cols-1 md:grid-cols-2">    
             <div class="w-full h-full bg-cover bg-center" style="background-image: url('{{ asset('image/foto 4.jpg') }}');">
@@ -11,20 +11,34 @@
 
             <div class="flex justify-center items-center bg-white p-8">
                 <div class="max-w-md w-full">
-                    <div>
-                        @if (Session::has('error'))
-                            <div id="error-message" class="bg-pink-100 border-l-4 border-red-500 text-gray-800 p-3 mb-4 rounded-md w-full z-50 opacity-100 transition-opacity duration-1000">
-                                <p class="text-sm">{{ Session::get('error') }}</p>
+                    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">REGISTER</h2>
+    
+                    <!-- Dynamic Alert Container - No gap when empty, smooth expand/collapse -->
+                    <div id="alert-container" class="mb-4 overflow-hidden transition-all duration-500 ease-in-out" 
+                         style="@if(!session('success') && !$errors->any() && !session('error')) max-height: 0; @else max-height: 200px; @endif">
+                        
+                        @if(session('success'))
+                            <div id="success-message" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-2 opacity-100 transition-all duration-1000">
+                                {{ session('success') }}
                             </div>
                         @endif
-
-                        <h3 class="text-xl font-bold mb-4 text-center">REGISTER</h3>
+                        
+                        @if($errors->any())
+                            <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2 opacity-100 transition-all duration-1000">
+                                <ul class="list-disc list-inside">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                        
+                        @if(session('error'))
+                            <div id="session-error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2 opacity-100 transition-all duration-1000">
+                                {{ session('error') }}
+                            </div>
+                        @endif
                     </div>
-                    @if (Session::has('success'))
-                        <div class="alert alert-success" role="alert">
-                            {{ Session::get('success') }}
-                        </div>                
-                    @endif
                     
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
@@ -57,4 +71,35 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const alertContainer = document.getElementById('alert-container');
+    
+    function hideMessage(messageId, delay = 3000) {
+        const message = document.getElementById(messageId);
+        if (message) {
+            setTimeout(() => {
+                // Fade out animation
+                message.style.transform = 'translateY(-10px)';
+                message.style.opacity = '0';
+                
+                setTimeout(() => {
+                    message.remove();
+                    
+                    // Check if container is empty, then collapse
+                    if (alertContainer.children.length === 0) {
+                        alertContainer.style.maxHeight = '0';
+                    }
+                }, 1000);
+            }, delay);
+        }
+    }
+
+    // Auto-hide messages with different delays
+    hideMessage('success-message', 3000);      // Success: 3 seconds
+    hideMessage('error-message', 5000);        // Validation errors: 5 seconds
+    hideMessage('session-error-message', 3000); // Session errors: 3 seconds
+});
+</script>
 @endsection
