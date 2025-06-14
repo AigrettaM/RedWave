@@ -54,11 +54,12 @@
 
             <!-- Menu khusus untuk User biasa -->
             @if(Auth::check() && Auth::user()->role === 'user')
-                <li>
-                    <div class="px-4 py-2">
-                        <hr class="border-red-500">
-                        <p class="text-red-200 text-xs font-semibold mt-2 mb-2 uppercase tracking-wider">Profiles</p>
-                    </div>
+
+                 <li>
+                    <a href="/profile" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
+                        <i class="fas fa-shopping-bag mr-3"></i>
+                        Profile
+                    </a>
                 </li>
 
                 <li>

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DependentDropdownController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,3 +32,16 @@ Route::group(['middleware'=> 'auth'], function () {
     Route::get('/home', [HomeController::class, 'index']);
     Route::delete('/logout', [AuthController::class, 'logout'])->name('logout');
 });
+
+// Profile routes
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/form', [ProfileController::class, 'form'])->name('profile.form');
+    Route::post('/profile/save', [ProfileController::class, 'save'])->name('profile.save');
+});
+
+// Dependent dropdown routes
+Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
+Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
+Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
+Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
