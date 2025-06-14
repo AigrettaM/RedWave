@@ -1,11 +1,8 @@
-<h1>
-    Halo, {{ Auth::user()->name }}
-</h1>
+@extends('dashboardlayout.app')
 
-<form method="POST" action="{{ route('logout') }}">
-@csrf
-@method('DELETE')
-<button class="btn btn-danger" type="submit">
-    Logout
-</button>
-</form>
+@section('title', 'Dashboard - Your App')
+@section('page-title', 'Dashboard')
+
+@section('content')
+
+@endsection
