@@ -24,7 +24,7 @@
 
     <!-- Header Section -->
     <div class="text-center mb-4">
-        <h2 class="text-dark fw-bolder">Tabel Data User</h2>
+        <h2 class="text-dark fw-bolder">Manajemen Data User</h2>
     </div>
 
     <!-- Search Section -->
