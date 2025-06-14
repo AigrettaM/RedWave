@@ -95,6 +95,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{donor}/complete', [DonorController::class, 'adminComplete'])->name('complete');
     });
 });
+
+// Admin - Manajemen Semua Data User (Profile)
+Route::get('/data-user', [ProfileController::class, 'index'])->name('profiles.index');
+Route::delete('/data-user/{id}', [ProfileController::class, 'destroy'])->name('profiles.destroy');
+
 // Public routes (bisa diakses semua orang)
 Route::get('/contact', function() {
     return view('informasi.contact');

@@ -74,4 +74,36 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.show')->with('success', $message);
     }
+
+    // Menampilkan semua profile (untuk admin)
+    public function index()
+    {
+        try {
+            $profiles = Profile::orderBy('created_at', 'desc')->get();
+            return view('admin.data-user', compact('profiles'));
+        } catch (\Exception $e) {
+            Log::error('Error fetching profiles: ' . $e->getMessage());
+            return view('admin.data-user', ['profiles' => collect()]);
+        }
+    }
+
+    // Menghapus profile tertentu (untuk admin) - DIPERBAIKI
+    public function destroy($id)
+    {
+        try {
+            $profile = Profile::findOrFail($id);
+            $userName = $profile->name; // Simpan nama sebelum dihapus
+            
+            $profile->delete();
+
+            return redirect()->route('profiles.index')
+                            ->with('success', "Data user '{$userName}' berhasil dihapus.");
+                            
+        } catch (\Exception $e) {
+            Log::error('Error deleting profile: ' . $e->getMessage());
+            
+            return redirect()->route('profiles.index')
+                            ->with('error', 'Gagal menghapus data user. Silakan coba lagi.');
+        }
+    }
 }
