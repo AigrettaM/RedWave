@@ -1,9 +1,9 @@
 @extends('layouts.app')
-
+@section('main-class', 'pt-0 w-full px-0') 
 @section('title', 'Contact - RedWave Blood Donation Center')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto pt-32">
     
     <!-- Hero Section -->
     <div class="text-center mb-12">

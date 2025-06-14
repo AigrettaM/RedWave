@@ -52,10 +52,21 @@ class BotManController extends Controller
             $this->emergencyResponse($botman);
         });
 
+        // Terima Kasih
+        $botman->hears('terima kasih|terimakasih|makasih|thanks|tengs|Arigato|Kamsahamida|Thank you|Thanks you', function ($botman) {
+            $this->ThanksResponse($botman);
+        });
+
+        // Setuju
+        $botman->hears('Yes|baik|okee|iyaa|siap|okeyy', function ($botman) {
+            $this->SetujuResponse($botman);
+        });
+
         // Fallback
         $botman->fallback(function($botman) {
             $this->fallbackResponse($botman);
         });
+        
 
         $botman->listen();
     }
@@ -125,11 +136,9 @@ class BotManController extends Controller
         $botman->reply('
             📞 <strong>Hubungi RedWave Blood Donation Center:</strong> <br><br>
             🏥 <strong>Nama:</strong> RedWave Blood Donation Center <br>
-            📍 <strong>Alamat:</strong> Jl. Donor Darah No. 123, Jakarta Pusat 12345 <br>
-            ☎️ <strong>Telepon:</strong> (021) 123-4567 <br>
-            📱 <strong>WhatsApp:</strong> 0812-3456-7890 <br>
-            📧 <strong>Email:</strong> info@redwave-donor.com <br>
-            🌐 <strong>Website:</strong> www.redwave-donor.com <br><br>
+            📱 <strong>WhatsApp:</strong> <a href="https://wa.me/6285172228224">Hubungi via WhatsApp</a> <br>
+            📧 <strong>Email:</strong> <a href="mailto:maigretta@gmail.com" target="_blank">info@redwave-donor.com</a> <br>    
+            🌐 <strong>Website:</strong> <a href="http://127.0.0.1:8000/">www.redwave-donor.com</a> <br>
             🚨 <strong>Hotline Darurat 24/7:</strong> 0812-3456-7890
         ');
     }
@@ -185,7 +194,27 @@ class BotManController extends Controller
         $botman->reply('
             Maaf, saya tidak mengerti pesan Anda. 🤔 <br><br>
             Ketik <strong>"help"</strong> untuk melihat daftar perintah yang tersedia. <br>
-            Atau coba kata kunci: "syarat", "jadwal", "golongan", "manfaat", "kontak" <br><br>
+            Atau coba kata kunci: "syarat", "golongan", "manfaat", "kontak" <br><br>
+            💬 Saya siap membantu Anda dengan informasi donor darah!
+        ');
+    }
+
+    private function ThanksResponse($botman)
+    {
+        $botman->reply('
+            Sama-sama, Saya harap jawaban saya membantu Anda! <br><br>
+            Jika perlu bantuan, Ketik <strong>"help"</strong> untuk melihat daftar perintah yang tersedia. <br>
+            Atau coba kata kunci: "syarat", "golongan", "manfaat", "kontak" <br><br>
+            💬 Saya siap membantu Anda dengan informasi donor darah!
+        ');
+    }
+
+    private function SetujuResponse($botman)
+    {
+        $botman->reply('
+            Baik, Saya harap Anda mengerti atas jawaban saya! <br><br>
+            Jika perlu bantuan, Ketik <strong>"help"</strong> untuk melihat daftar perintah yang tersedia. <br>
+            Atau coba kata kunci: "syarat", "golongan", "manfaat", "kontak" <br><br>
             💬 Saya siap membantu Anda dengan informasi donor darah!
         ');
     }
