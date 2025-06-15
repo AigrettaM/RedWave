@@ -12,7 +12,7 @@
                 <p class="text-gray-600">Kelola semua lokasi PMI untuk donor darah</p>
             </div>
             <div class="mt-4 md:mt-0 flex gap-2">
-                <a href="{{ route('lokasis.create') }}" 
+                <a href="{{ route('admin.lokasis.create') }}" 
                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center">
                     <i class="fas fa-plus mr-2"></i>
                     Tambah Lokasi
@@ -282,7 +282,7 @@
                                     <i class="fas fa-map-marker-alt text-4xl mb-4 text-gray-300"></i>
                                     <p class="text-lg mb-2">Belum ada data lokasi donor</p>
                                     <p class="text-sm text-gray-400 mb-4">Mulai tambahkan lokasi PMI untuk donor darah</p>
-                                    <a href="{{ route('lokasis.create') }}" 
+                                    <a href="{{ route('admin.lokasis.create') }}" 
                                        class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                                         <i class="fas fa-plus mr-2"></i>
                                         Tambah Lokasi Pertama
