@@ -11,14 +11,16 @@ class DonationSeeder extends Seeder
 {
   public function run()
   {
-      // 1. Buat Stored Procedure untuk validasi donor
+      echo "🚀 Memulai DonationSeeder untuk tabel donors...\n";
+      
+      // 1. Buat Stored Procedures
       $this->createStoredProcedures();
       
-      // 2. Buat Trigger untuk update stok darah otomatis
+      // 2. Buat Triggers (diperbaiki)
       $this->createTriggers();
       
       // 3. Jalankan seeding dengan transaction
-      $this->seedDonationsWithTransaction();
+      $this->seedDonorsWithTransaction();
   }
 
   /**
@@ -26,122 +28,160 @@ class DonationSeeder extends Seeder
    */
   private function createStoredProcedures()
   {
-      // Drop procedure jika sudah ada
-      DB::unprepared('DROP PROCEDURE IF EXISTS ValidateDonorEligibility');
-      DB::unprepared('DROP PROCEDURE IF EXISTS CalculateDonorStats');
-      DB::unprepared('DROP PROCEDURE IF EXISTS UpdateBloodStock');
+      echo "📝 Membuat Stored Procedures...\n";
 
-      // Procedure 1: Validasi kelayakan donor
+      // Drop procedures jika sudah ada
+      DB::unprepared('DROP PROCEDURE IF EXISTS ValidateDonorEligibility');
+      DB::unprepared('DROP PROCEDURE IF EXISTS CalculateNextEligibleDate');
+      DB::unprepared('DROP PROCEDURE IF EXISTS UpdateDonorStatus');
+      DB::unprepared('DROP PROCEDURE IF EXISTS GetDonorStatistics');
+
+      // Procedure 1: Validasi kelayakan donor (diperbaiki typo)
       DB::unprepared('
           CREATE PROCEDURE ValidateDonorEligibility(
-              IN donor_id INT,
-              OUT is_eligible BOOLEAN,
-              OUT reason_message VARCHAR(255)
+              IN p_user_id INT,
+              IN p_health_questions JSON,
+              OUT p_is_eligible BOOLEAN,
+              OUT p_rejection_reason TEXT
           )
           BEGIN
               DECLARE last_donation_date DATE;
               DECLARE days_since_last INT DEFAULT 0;
-              DECLARE donor_age INT;
-              DECLARE donor_gender VARCHAR(20);
+              DECLARE donor_count INT DEFAULT 0;
               
-              -- Ambil data donor dari profiles
-              SELECT 
-                  TIMESTAMPDIFF(YEAR, birth_date, CURDATE()),
-                  gender
-              INTO donor_age, donor_gender
-              FROM profiles 
-              WHERE user_id = donor_id;
+              -- Cek apakah user sudah pernah donor
+              SELECT COUNT(*), MAX(donation_date) 
+              INTO donor_count, last_donation_date
+              FROM donors 
+              WHERE user_id = p_user_id AND status = "completed";
               
-              -- Cek donasi terakhir
-              SELECT MAX(donation_date) 
-              INTO last_donation_date
-              FROM donations 
-              WHERE donor_id = donor_id AND status = "completed";
-              
+              -- Hitung hari sejak donasi terakhir
               IF last_donation_date IS NOT NULL THEN
                   SET days_since_last = DATEDIFF(CURDATE(), last_donation_date);
               END IF;
               
-              -- Validasi kelayakan
-              SET is_eligible = TRUE;
-              SET reason_message = "Donor memenuhi syarat";
+              -- Default eligible
+              SET p_is_eligible = TRUE;
+              SET p_rejection_reason = NULL;
               
-              -- Cek umur (17-65 tahun)
-              IF donor_age < 17 OR donor_age > 65 THEN
-                  SET is_eligible = FALSE;
-                  SET reason_message = "Umur donor harus antara 17-65 tahun";
-              -- Cek jarak donasi (minimal 56 hari untuk pria, 84 hari untuk wanita)
-              ELSEIF donor_gender = "Laki-laki" AND days_since_last < 56 AND last_donation_date IS NOT NULL THEN
-                  SET is_eligible = FALSE;
-                  SET reason_message = CONCAT("Harus menunggu ", 56 - days_since_last, " hari lagi");
-              ELSEIF donor_gender = "Perempuan" AND days_since_last < 84 AND last_donation_date IS NOT NULL THEN
-                  SET is_eligible = FALSE;
-                  SET reason_message = CONCAT("Harus menunggu ", 84 - days_since_last, " hari lagi");
+              -- Validasi jarak donasi (minimal 56 hari)
+              IF last_donation_date IS NOT NULL AND days_since_last < 56 THEN
+                  SET p_is_eligible = FALSE;
+                  SET p_rejection_reason = CONCAT("Harus menunggu ", 56 - days_since_last, " hari lagi sejak donasi terakhir");
+                  
+              -- Validasi kesehatan berdasarkan health_questions
+              ELSEIF JSON_EXTRACT(p_health_questions, "$.has_fever") = true THEN
+                  SET p_is_eligible = FALSE;
+                  SET p_rejection_reason = "Sedang demam, tidak dapat mendonor";
+                  
+              ELSEIF JSON_EXTRACT(p_health_questions, "$.taking_medication") = true THEN
+                  SET p_is_eligible = FALSE;
+                  SET p_rejection_reason = "Sedang mengonsumsi obat-obatan";
+                  
+              ELSEIF JSON_EXTRACT(p_health_questions, "$.recent_surgery") = true THEN
+                  SET p_is_eligible = FALSE;
+                  SET p_rejection_reason = "Baru menjalani operasi dalam 6 bulan terakhir";
+                  
+              ELSEIF JSON_EXTRACT(p_health_questions, "$.weight") < 45 THEN
+                  SET p_is_eligible = FALSE;
+                  SET p_rejection_reason = "Berat badan kurang dari 45 kg";
               END IF;
           END
       ');
 
-      // Procedure 2: Hitung statistik donor
+      // Procedure 2: Hitung tanggal eligible berikutnya
       DB::unprepared('
-          CREATE PROCEDURE CalculateDonorStats(
-              IN donor_id INT,
-              OUT total_donations INT,
-              OUT total_volume INT,
-              OUT last_donation_date DATE,
-              OUT donor_level VARCHAR(50)
+          CREATE PROCEDURE CalculateNextEligibleDate(
+              IN p_user_id INT,
+              IN p_donation_date DATE,
+              OUT p_next_eligible_date DATE
+          )
+          BEGIN
+              DECLARE user_gender VARCHAR(20) DEFAULT "Laki-laki";
+              DECLARE waiting_days INT DEFAULT 56;
+              
+              -- Ambil gender dari profiles jika ada
+              SELECT gender INTO user_gender
+              FROM profiles 
+              WHERE user_id = p_user_id
+              LIMIT 1;
+              
+              -- Tentukan periode tunggu berdasarkan gender
+              IF user_gender = "Perempuan" THEN
+                  SET waiting_days = 84; -- 12 minggu untuk wanita
+              ELSE
+                  SET waiting_days = 56; -- 8 minggu untuk pria
+              END IF;
+              
+              -- Hitung tanggal eligible berikutnya
+              SET p_next_eligible_date = DATE_ADD(p_donation_date, INTERVAL waiting_days DAY);
+          END
+      ');
+
+      // Procedure 3: Update status donor
+      DB::unprepared('
+          CREATE PROCEDURE UpdateDonorStatus(
+              IN p_donor_id INT,
+              IN p_new_status VARCHAR(20),
+              IN p_notes TEXT
+          )
+          BEGIN
+              DECLARE old_status VARCHAR(20);
+              
+              -- Ambil status lama
+              SELECT status INTO old_status
+              FROM donors 
+              WHERE id = p_donor_id;
+              
+              -- Update status dan timestamps
+              UPDATE donors 
+              SET 
+                  status = p_new_status,
+                  notes = COALESCE(p_notes, notes),
+                  updated_at = NOW(),
+                  approved_at = CASE 
+                      WHEN p_new_status = "approved" THEN NOW() 
+                      ELSE approved_at 
+                  END,
+                  completed_at = CASE 
+                      WHEN p_new_status = "completed" THEN NOW() 
+                      ELSE completed_at 
+                  END
+              WHERE id = p_donor_id;
+          END
+      ');
+
+      // Procedure 4: Statistik donor
+      DB::unprepared('
+          CREATE PROCEDURE GetDonorStatistics(
+              IN p_user_id INT,
+              OUT p_total_donations INT,
+              OUT p_successful_donations INT,
+              OUT p_last_donation_date DATE,
+              OUT p_donor_level VARCHAR(50)
           )
           BEGIN
               -- Hitung total donasi
-              SELECT 
-                  COUNT(*),
-                  COALESCE(SUM(volume_ml), 0),
-                  MAX(donation_date)
-              INTO total_donations, total_volume, last_donation_date
-              FROM donations 
-              WHERE donor_id = donor_id AND status = "completed";
+              SELECT COUNT(*) INTO p_total_donations
+              FROM donors 
+              WHERE user_id = p_user_id;
               
-              -- Tentukan level donor berdasarkan jumlah donasi
+              -- Hitung donasi yang berhasil
+              SELECT COUNT(*), MAX(donation_date) 
+              INTO p_successful_donations, p_last_donation_date
+              FROM donors 
+              WHERE user_id = p_user_id AND status = "completed";
+              
+              -- Tentukan level donor
               CASE
-                  WHEN total_donations >= 50 THEN SET donor_level = "Diamond Donor";
-                  WHEN total_donations >= 25 THEN SET donor_level = "Gold Donor";
-                  WHEN total_donations >= 10 THEN SET donor_level = "Silver Donor";
-                  WHEN total_donations >= 5 THEN SET donor_level = "Bronze Donor";
-                  WHEN total_donations >= 1 THEN SET donor_level = "Regular Donor";
-                  ELSE SET donor_level = "New Donor";
+                  WHEN p_successful_donations >= 50 THEN SET p_donor_level = "Diamond Donor";
+                  WHEN p_successful_donations >= 25 THEN SET p_donor_level = "Platinum Donor";
+                  WHEN p_successful_donations >= 15 THEN SET p_donor_level = "Gold Donor";
+                  WHEN p_successful_donations >= 8 THEN SET p_donor_level = "Silver Donor";
+                  WHEN p_successful_donations >= 3 THEN SET p_donor_level = "Bronze Donor";
+                  WHEN p_successful_donations >= 1 THEN SET p_donor_level = "Regular Donor";
+                  ELSE SET p_donor_level = "New Donor";
               END CASE;
-          END
-      ');
-
-      // Procedure 3: Update stok darah
-      DB::unprepared('
-          CREATE PROCEDURE UpdateBloodStock(
-              IN blood_type VARCHAR(5),
-              IN rhesus VARCHAR(10),
-              IN volume_change INT,
-              IN operation_type VARCHAR(10)
-          )
-          BEGIN
-              DECLARE current_stock INT DEFAULT 0;
-              
-              -- Ambil stok saat ini
-              SELECT stock_ml INTO current_stock
-              FROM blood_stocks 
-              WHERE blood_type = blood_type AND rhesus = rhesus;
-              
-              -- Update stok berdasarkan operasi
-              IF operation_type = "ADD" THEN
-                  UPDATE blood_stocks 
-                  SET 
-                      stock_ml = stock_ml + volume_change,
-                      last_updated = NOW()
-                  WHERE blood_type = blood_type AND rhesus = rhesus;
-              ELSEIF operation_type = "SUBTRACT" THEN
-                  UPDATE blood_stocks 
-                  SET 
-                      stock_ml = GREATEST(0, stock_ml - volume_change),
-                      last_updated = NOW()
-                  WHERE blood_type = blood_type AND rhesus = rhesus;
-              END IF;
           END
       ');
 
@@ -149,282 +189,302 @@ class DonationSeeder extends Seeder
   }
 
   /**
-   * Membuat Triggers
+   * Membuat Triggers (diperbaiki untuk menghindari error 1442)
    */
   private function createTriggers()
   {
-      // Drop trigger jika sudah ada
-      DB::unprepared('DROP TRIGGER IF EXISTS after_donation_insert');
-      DB::unprepared('DROP TRIGGER IF EXISTS after_donation_update');
-      DB::unprepared('DROP TRIGGER IF EXISTS donation_audit_log');
+      echo "🔧 Membuat Triggers...\n";
 
-      // Trigger 1: Auto update stok darah setelah donasi berhasil
-      DB::unprepared('
-          CREATE TRIGGER after_donation_insert
-          AFTER INSERT ON donations
-          FOR EACH ROW
-          BEGIN
-              IF NEW.status = "completed" THEN
-                  -- Ambil data golongan darah donor
-                  SET @blood_type = (SELECT blood_type FROM profiles WHERE user_id = NEW.donor_id);
-                  SET @rhesus = (SELECT rhesus FROM profiles WHERE user_id = NEW.donor_id);
-                  
-                  -- Update stok darah
-                  CALL UpdateBloodStock(@blood_type, @rhesus, NEW.volume_ml, "ADD");
-                  
-                  -- Log aktivitas
-                  INSERT INTO donation_logs (donation_id, action, description, created_at)
-                  VALUES (NEW.id, "STOCK_UPDATED", 
-                         CONCAT("Stok darah ", @blood_type, " ", @rhesus, " bertambah ", NEW.volume_ml, " ml"), 
-                         NOW());
-              END IF;
-          END
-      ');
-
-      // Trigger 2: Update stok saat status donasi berubah
-      DB::unprepared('
-          CREATE TRIGGER after_donation_update
-          AFTER UPDATE ON donations
-          FOR EACH ROW
-          BEGIN
-              -- Jika status berubah dari pending ke completed
-              IF OLD.status != "completed" AND NEW.status = "completed" THEN
-                  SET @blood_type = (SELECT blood_type FROM profiles WHERE user_id = NEW.donor_id);
-                  SET @rhesus = (SELECT rhesus FROM profiles WHERE user_id = NEW.donor_id);
-                  
-                  CALL UpdateBloodStock(@blood_type, @rhesus, NEW.volume_ml, "ADD");
-                  
-                  INSERT INTO donation_logs (donation_id, action, description, created_at)
-                  VALUES (NEW.id, "STATUS_COMPLETED", 
-                         CONCAT("Donasi completed, stok ", @blood_type, " ", @rhesus, " +", NEW.volume_ml, " ml"), 
-                         NOW());
-                         
-              -- Jika status berubah dari completed ke cancelled
-              ELSEIF OLD.status = "completed" AND NEW.status = "cancelled" THEN
-                  SET @blood_type = (SELECT blood_type FROM profiles WHERE user_id = NEW.donor_id);
-                  SET @rhesus = (SELECT rhesus FROM profiles WHERE user_id = NEW.donor_id);
-                  
-                  CALL UpdateBloodStock(@blood_type, @rhesus, OLD.volume_ml, "SUBTRACT");
-                  
-                  INSERT INTO donation_logs (donation_id, action, description, created_at)
-                  VALUES (NEW.id, "STATUS_CANCELLED", 
-                         CONCAT("Donasi dibatalkan, stok ", @blood_type, " ", @rhesus, " -", OLD.volume_ml, " ml"), 
-                         NOW());
-              END IF;
-          END
-      ');
+      // Drop triggers jika sudah ada
+      DB::unprepared('DROP TRIGGER IF EXISTS donors_after_insert');
+      DB::unprepared('DROP TRIGGER IF EXISTS donors_after_update');
+      DB::unprepared('DROP TRIGGER IF EXISTS donors_before_update');
 
       // Buat tabel log jika belum ada
+      $this->createLogTables();
+
+      // Trigger 1: Setelah insert donor baru (tanpa update next_eligible_date)
       DB::unprepared('
-          CREATE TABLE IF NOT EXISTS donation_logs (
-              id INT AUTO_INCREMENT PRIMARY KEY,
-              donation_id INT,
-              action VARCHAR(50),
-              description TEXT,
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-              INDEX idx_donation_id (donation_id),
-              INDEX idx_action (action),
-              INDEX idx_created_at (created_at)
-          )
+          CREATE TRIGGER donors_after_insert
+          AFTER INSERT ON donors
+          FOR EACH ROW
+          BEGIN
+              -- Log aktivitas saja, tidak update tabel donors
+              INSERT INTO donor_activity_logs (
+                  donor_id, user_id, activity_type, description, created_at
+              ) VALUES (
+                  NEW.id, NEW.user_id, "REGISTRATION", 
+                  CONCAT("Donor baru terdaftar dengan kode: ", NEW.donor_code), 
+                  NOW()
+              );
+              
+              -- Update statistik user
+              INSERT INTO user_donor_stats (user_id, total_registrations, last_registration_date, created_at, updated_at)
+              VALUES (NEW.user_id, 1, NEW.donation_date, NOW(), NOW())
+              ON DUPLICATE KEY UPDATE
+                  total_registrations = total_registrations + 1,
+                  last_registration_date = NEW.donation_date,
+                  updated_at = NOW();
+          END
+      ');
+
+      // Trigger 2: Sebelum update (validasi dan auto-generate)
+      DB::unprepared('
+          CREATE TRIGGER donors_before_update
+          BEFORE UPDATE ON donors
+          FOR EACH ROW
+          BEGIN
+              -- Validasi transisi status
+              IF OLD.status = "completed" AND NEW.status NOT IN ("completed", "cancelled") THEN
+                  SIGNAL SQLSTATE "45000" 
+                  SET MESSAGE_TEXT = "Tidak dapat mengubah status dari completed ke status lain kecuali cancelled";
+              END IF;
+              
+              -- Auto-generate donor_code jika kosong
+              IF NEW.donor_code IS NULL OR NEW.donor_code = "" THEN
+                  SET NEW.donor_code = CONCAT("DNR", YEAR(NEW.donation_date), LPAD(NEW.id, 6, "0"));
+              END IF;
+          END
+      ');
+
+      // Trigger 3: Setelah update
+      DB::unprepared('
+          CREATE TRIGGER donors_after_update
+          AFTER UPDATE ON donors
+          FOR EACH ROW
+          BEGIN
+              -- Log jika status berubah
+              IF OLD.status != NEW.status THEN
+                  INSERT INTO donor_activity_logs (
+                      donor_id, user_id, activity_type, description, created_at
+                  ) VALUES (
+                      NEW.id, NEW.user_id, "STATUS_CHANGE",
+                      CONCAT("Status berubah dari ", OLD.status, " ke ", NEW.status),
+                      NOW()
+                  );
+                  
+                  -- Update statistik jika status menjadi completed
+                  IF NEW.status = "completed" THEN
+                      UPDATE user_donor_stats 
+                      SET 
+                          successful_donations = successful_donations + 1,
+                          last_successful_donation = NEW.donation_date,
+                          updated_at = NOW()
+                      WHERE user_id = NEW.user_id;
+                  END IF;
+              END IF;
+          END
       ');
 
       echo "✅ Triggers berhasil dibuat\n";
   }
 
   /**
-   * Seeding data donasi dengan Transaction
+   * Buat tabel log yang diperlukan
    */
-  private function seedDonationsWithTransaction()
+  private function createLogTables()
   {
-      // Buat tabel donations jika belum ada
-      $this->createDonationsTable();
+      // Tabel log aktivitas donor
+      DB::unprepared('
+          CREATE TABLE IF NOT EXISTS donor_activity_logs (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              donor_id INT NOT NULL,
+              user_id INT NOT NULL,
+              activity_type VARCHAR(50),
+              description TEXT,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              INDEX idx_donor_id (donor_id),
+              INDEX idx_user_id (user_id),
+              INDEX idx_activity_type (activity_type)
+          )
+      ');
 
-      $donationData = $this->prepareDonationData();
-      $batchSize = 10; // Process dalam batch untuk performa
-      $batches = array_chunk($donationData, $batchSize);
+      // Tabel statistik donor per user
+      DB::unprepared('
+          CREATE TABLE IF NOT EXISTS user_donor_stats (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              user_id INT UNIQUE NOT NULL,
+              total_registrations INT DEFAULT 0,
+              successful_donations INT DEFAULT 0,
+              last_registration_date DATE,
+              last_successful_donation DATE,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              INDEX idx_user_id (user_id)
+          )
+      ');
+  }
+
+  /**
+   * Seeding data dengan Transaction (diperbaiki)
+   */
+  private function seedDonorsWithTransaction()
+  {
+      echo "💾 Memulai seeding data donors...\n";
+
+      // Cek berapa banyak users yang tersedia
+      $maxUserId = DB::table('users')->max('id');
+      $userCount = DB::table('users')->count();
+      
+      echo "👥 Tersedia {$userCount} users (max ID: {$maxUserId})\n";
+
+      $donorData = $this->prepareDonorData($maxUserId);
+      $batchSize = 15;
+      $batches = array_chunk($donorData, $batchSize);
+      $insertedCount = 0;
+      $skippedCount = 0;
 
       foreach ($batches as $batchIndex => $batch) {
-          // Mulai Transaction
           DB::beginTransaction();
           
           try {
               echo "🔄 Memproses batch " . ($batchIndex + 1) . " dari " . count($batches) . "\n";
               
-              foreach ($batch as $donation) {
+              foreach ($batch as $donor) {
                   // Validasi donor menggunakan stored procedure
-                  $result = DB::select('
-                      CALL ValidateDonorEligibility(?, @is_eligible, @reason_message);
-                      SELECT @is_eligible as is_eligible, @reason_message as reason_message;
-                  ', [$donation['donor_id']]);
+                  DB::select('
+                      CALL ValidateDonorEligibility(?, ?, @is_eligible, @rejection_reason)
+                  ', [$donor['user_id'], $donor['health_questions']]);
                   
-                  $validation = $result[1] ?? $result[0];
+                  $validation = DB::select('
+                      SELECT @is_eligible as is_eligible, @rejection_reason as rejection_reason
+                  ')[0];
                   
+                  // Set status berdasarkan validasi
                   if (!$validation->is_eligible) {
-                      echo "⚠️  Donor ID {$donation['donor_id']} tidak memenuhi syarat: {$validation->reason_message}\n";
-                      // Skip donor ini tapi lanjutkan yang lain
-                      continue;
+                      $donor['is_eligible'] = false;
+                      $donor['rejection_reason'] = $validation->rejection_reason;
+                      $donor['status'] = 'rejected';
+                      echo "⚠️  Donor user_id {$donor['user_id']} ditolak: {$validation->rejection_reason}\n";
+                  } else {
+                      $donor['is_eligible'] = true;
+                      $donor['rejection_reason'] = null;
                   }
 
-                  // Insert donation record
-                  $donationId = DB::table('donations')->insertGetId([
-                      'donor_id' => $donation['donor_id'],
-                      'lokasi_id' => $donation['lokasi_id'],
-                      'donation_date' => $donation['donation_date'],
-                      'volume_ml' => $donation['volume_ml'],
-                      'hemoglobin_level' => $donation['hemoglobin_level'],
-                      'blood_pressure' => $donation['blood_pressure'],
-                      'pulse_rate' => $donation['pulse_rate'],
-                      'temperature' => $donation['temperature'],
-                      'weight' => $donation['weight'],
-                      'status' => $donation['status'],
-                      'notes' => $donation['notes'],
-                      'created_by' => $donation['created_by'],
-                      'created_at' => $donation['created_at'],
-                      'updated_at' => $donation['updated_at']
-                  ]);
-
-                  // Hitung statistik donor menggunakan stored procedure
+                  // Hitung next_eligible_date sebelum insert
                   DB::select('
-                      CALL CalculateDonorStats(?, @total_donations, @total_volume, @last_donation, @donor_level)
-                  ', [$donation['donor_id']]);
+                      CALL CalculateNextEligibleDate(?, ?, @next_date)
+                  ', [$donor['user_id'], $donor['donation_date']]);
                   
-                  $stats = DB::select('
-                      SELECT @total_donations as total_donations, 
-                             @total_volume as total_volume, 
-                             @last_donation as last_donation,
-                             @donor_level as donor_level
-                  ')[0];
+                  $nextDate = DB::select('SELECT @next_date as next_date')[0];
+                  $donor['next_eligible_date'] = $nextDate->next_date;
 
-                  // Update donor statistics (jika tabel ada)
-                  DB::table('donor_statistics')->updateOrInsert(
-                      ['donor_id' => $donation['donor_id']],
-                      [
-                          'total_donations' => $stats->total_donations,
-                          'total_volume_ml' => $stats->total_volume,
-                          'last_donation_date' => $stats->last_donation,
-                          'donor_level' => $stats->donor_level,
-                          'updated_at' => now()
-                      ]
-                  );
+                  // Insert donor record
+                  $donorId = DB::table('donors')->insertGetId($donor);
+                  $insertedCount++;
 
-                  echo "✅ Donasi ID {$donationId} berhasil ditambahkan\n";
+                  echo "✅ Donor ID {$donorId} berhasil ditambahkan\n";
               }
 
-              // Commit transaction jika semua berhasil
               DB::commit();
               echo "✅ Batch " . ($batchIndex + 1) . " berhasil diproses\n\n";
               
           } catch (Exception $e) {
-              // Rollback jika ada error
               DB::rollback();
               echo "❌ Error pada batch " . ($batchIndex + 1) . ": " . $e->getMessage() . "\n";
               echo "🔄 Rollback dilakukan untuk batch ini\n\n";
-              
-              // Lanjutkan ke batch berikutnya
               continue;
           }
       }
 
-      echo "🎉 Seeding donasi selesai!\n";
+      echo "🎉 Seeding donors selesai!\n";
+      echo "📊 Inserted: {$insertedCount}, Skipped: {$skippedCount}\n";
       $this->showSummary();
   }
 
   /**
-   * Buat tabel yang diperlukan
+   * Persiapkan data donor dummy (diperbaiki)
    */
-  private function createDonationsTable()
+  private function prepareDonorData($maxUserId)
   {
-      DB::unprepared('
-          CREATE TABLE IF NOT EXISTS donations (
-              id INT AUTO_INCREMENT PRIMARY KEY,
-              donor_id INT NOT NULL,
-              lokasi_id INT NOT NULL,
-              donation_date DATE NOT NULL,
-              volume_ml INT DEFAULT 450,
-              hemoglobin_level DECIMAL(3,1),
-              blood_pressure VARCHAR(20),
-              pulse_rate INT,
-              temperature DECIMAL(3,1),
-              weight DECIMAL(5,2),
-              status ENUM("pending", "completed", "cancelled", "rejected") DEFAULT "pending",
-              notes TEXT,
-              created_by VARCHAR(100),
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-              INDEX idx_donor_id (donor_id),
-              INDEX idx_lokasi_id (lokasi_id),
-              INDEX idx_donation_date (donation_date),
-              INDEX idx_status (status)
-          )
-      ');
-
-      DB::unprepared('
-          CREATE TABLE IF NOT EXISTS donor_statistics (
-              id INT AUTO_INCREMENT PRIMARY KEY,
-              donor_id INT UNIQUE NOT NULL,
-              total_donations INT DEFAULT 0,
-              total_volume_ml INT DEFAULT 0,
-              last_donation_date DATE,
-              donor_level VARCHAR(50) DEFAULT "New Donor",
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-              INDEX idx_donor_id (donor_id),
-              INDEX idx_donor_level (donor_level)
-          )
-      ');
-  }
-
-  /**
-   * Persiapkan data donasi dummy
-   */
-  private function prepareDonationData()
-  {
-      $donations = [];
-      $statuses = ['completed', 'completed', 'completed', 'pending', 'cancelled'];
-      $bloodPressures = ['120/80', '110/70', '130/85', '125/82', '115/75'];
-      $createdBy = ['Dr. Ahmad', 'Dr. Sari', 'Perawat Budi', 'Dr. Lisa', 'Perawat Dian'];
-
-      // Generate 100 donasi
-      for ($i = 1; $i <= 100; $i++) {
-          $donationDate = Carbon::now()->subDays(rand(1, 365))->format('Y-m-d');
-          
-          $donations[] = [
-              'donor_id' => rand(1, 20), // Asumsi ada 20 donor
-              'lokasi_id' => rand(1, 10), // Asumsi ada 10 lokasi
-              'donation_date' => $donationDate,
-              'volume_ml' => [350, 400, 450, 500][array_rand([350, 400, 450, 500])],
-              'hemoglobin_level' => round(rand(120, 160) / 10, 1), // 12.0 - 16.0
-              'blood_pressure' => $bloodPressures[array_rand($bloodPressures)],
-              'pulse_rate' => rand(60, 100),
-              'temperature' => round(rand(360, 375) / 10, 1), // 36.0 - 37.5
-              'weight' => round(rand(450, 900) / 10, 1), // 45.0 - 90.0 kg
-              'status' => $statuses[array_rand($statuses)],
-              'notes' => $this->generateNotes(),
-              'created_by' => $createdBy[array_rand($createdBy)],
-              'created_at' => Carbon::parse($donationDate)->addHours(rand(1, 5)),
-              'updated_at' => Carbon::parse($donationDate)->addHours(rand(6, 24))
-          ];
-      }
-
-      return $donations;
-  }
-
-  /**
-   * Generate catatan donasi
-   */
-  private function generateNotes()
-  {
-      $notes = [
-          'Donor dalam kondisi sehat, tidak ada keluhan',
-          'Pemeriksaan fisik normal, donor kooperatif',
-          'Tekanan darah stabil, tidak ada riwayat penyakit',
-          'Donor rutin, kondisi prima',
-          'Pemeriksaan lengkap, hasil memuaskan',
-          'Donor pertama kali, sedikit nervous tapi kooperatif',
-          'Kondisi fisik baik, motivasi tinggi untuk membantu',
-          null, null // Beberapa tanpa notes
+      $donors = [];
+      // Status yang sesuai dengan enum di database (pastikan tidak lebih dari panjang kolom)
+      $statuses = ['pending', 'approved', 'completed', 'rejected'];
+      $locations = range(1, 10); // Asumsi ada 10 lokasi
+      $addresses = [
+          'Jl. Merdeka No. 123, Jakarta Pusat',
+          'Jl. Sudirman No. 456, Jakarta Selatan', 
+          'Jl. Thamrin No. 789, Jakarta Pusat',
+          'Jl. Gatot Subroto No. 321, Jakarta Selatan',
+          'Jl. Kuningan No. 654, Jakarta Selatan',
+          'Jl. Senayan No. 987, Jakarta Pusat',
+          'Jl. Kemang No. 147, Jakarta Selatan',
+          'Jl. Menteng No. 258, Jakarta Pusat',
+          'Jl. Kelapa Gading No. 369, Jakarta Utara',
+          'Jl. Pondok Indah No. 741, Jakarta Selatan'
       ];
 
+      // Generate 100 donor records (dikurangi untuk menghindari foreign key error)
+      for ($i = 1; $i <= 100; $i++) {
+          $donationDate = Carbon::now()->subDays(rand(1, 365))->format('Y-m-d'); // 1 tahun terakhir
+          $status = $statuses[array_rand($statuses)];
+          
+          // Generate health questions JSON
+          $healthQuestions = json_encode([
+              'has_fever' => rand(0, 10) < 1, // 10% kemungkinan demam
+              'taking_medication' => rand(0, 10) < 2, // 20% kemungkinan minum obat
+              'recent_surgery' => rand(0, 10) < 1, // 10% kemungkinan operasi
+              'weight' => rand(45, 90), // Berat badan 45-90 kg
+              'blood_pressure' => rand(110, 140) . '/' . rand(70, 90),
+              'hemoglobin' => round(rand(120, 160) / 10, 1) // 12.0-16.0 g/dL
+          ]);
+
+          $donor = [
+              'user_id' => rand(1, min($maxUserId, 20)), // Gunakan user_id yang ada
+              'donor_code' => 'DNR' . date('Y') . str_pad($i, 6, '0', STR_PAD_LEFT),
+              'health_questions' => $healthQuestions,
+              'is_eligible' => true, // Akan divalidasi oleh stored procedure
+              'rejection_reason' => null,
+              'status' => $status,
+              'donation_date' => $donationDate,
+              'next_eligible_date' => null, // Akan dihitung sebelum insert
+              'notes' => $this->generateNotes($status),
+              'approved_at' => $status === 'approved' || $status === 'completed' ? 
+                  Carbon::parse($donationDate)->addHours(rand(1, 4)) : null,
+              'completed_at' => $status === 'completed' ? 
+                  Carbon::parse($donationDate)->addHours(rand(5, 8)) : null,
+              'alamat' => $addresses[array_rand($addresses)],
+              'lokasi_id' => $locations[array_rand($locations)],
+              'created_at' => Carbon::parse($donationDate)->subHours(rand(1, 24)),
+              'updated_at' => Carbon::parse($donationDate)->addHours(rand(1, 48))
+          ];
+
+          $donors[] = $donor;
+      }
+
+      return $donors;
+  }
+
+  /**
+   * Generate catatan berdasarkan status
+   */
+  private function generateNotes($status)
+  {
+      $notesByStatus = [
+          'pending' => [
+              'Menunggu verifikasi dokumen',
+              'Pendaftaran baru, belum diperiksa',
+              'Dalam antrian pemeriksaan'
+          ],
+          'approved' => [
+              'Donor memenuhi syarat kesehatan',
+              'Pemeriksaan fisik normal',
+              'Siap untuk proses donasi'
+          ],
+          'completed' => [
+              'Donasi berhasil dilakukan',
+              'Donor dalam kondisi baik setelah donasi',
+              'Proses donasi berjalan lancar',
+              'Donor kooperatif, tidak ada komplikasi'
+          ],
+          'rejected' => [
+              'Tidak memenuhi syarat kesehatan',
+              'Berat badan kurang dari standar',
+              'Sedang dalam pengobatan'
+          ]
+      ];
+
+      $notes = $notesByStatus[$status] ?? ['Catatan umum'];
       return $notes[array_rand($notes)];
   }
 
@@ -433,29 +493,45 @@ class DonationSeeder extends Seeder
    */
   private function showSummary()
   {
-      $totalDonations = DB::table('donations')->count();
-      $completedDonations = DB::table('donations')->where('status', 'completed')->count();
-      $totalVolume = DB::table('donations')->where('status', 'completed')->sum('volume_ml');
+      $totalDonors = DB::table('donors')->count();
+      $byStatus = DB::table('donors')
+          ->select('status', DB::raw('COUNT(*) as count'))
+          ->groupBy('status')
+          ->get();
       
-      echo "\n📊 RINGKASAN SEEDING DONASI:\n";
-      echo "================================\n";
-      echo "Total Donasi: {$totalDonations}\n";
-      echo "Donasi Completed: {$completedDonations}\n";
-      echo "Total Volume: " . number_format($totalVolume) . " ml\n";
-      echo "================================\n";
+      $eligible = DB::table('donors')->where('is_eligible', true)->count();
+      $rejected = DB::table('donors')->where('is_eligible', false)->count();
 
-      // Tampilkan contoh penggunaan stored procedure
-      echo "\n🔍 CONTOH PENGGUNAAN STORED PROCEDURE:\n";
-      echo "=====================================\n";
+      echo "\n📊 RINGKASAN SEEDING DONORS:\n";
+      echo "===============================\n";
+      echo "Total Donors: {$totalDonors}\n";
+      echo "Eligible: {$eligible}\n";
+      echo "Rejected: {$rejected}\n";
+      echo "\nStatus Distribution:\n";
       
-      $result = DB::select('CALL CalculateDonorStats(1, @total, @volume, @last, @level)');
-      $stats = DB::select('SELECT @total as total, @volume as volume, @last as last_date, @level as level')[0];
+      foreach ($byStatus as $status) {
+          echo "- {$status->status}: {$status->count}\n";
+      }
       
-      echo "Donor ID 1:\n";
-      echo "- Total Donasi: {$stats->total}\n";
-      echo "- Total Volume: {$stats->volume} ml\n";
-      echo "- Donasi Terakhir: {$stats->last_date}\n";
-      echo "- Level: {$stats->level}\n";
-      echo "=====================================\n";
+      echo "===============================\n";
+
+      // Test stored procedure
+      echo "\n🧪 TEST STORED PROCEDURE:\n";
+      echo "========================\n";
+      
+      try {
+          DB::select('CALL GetDonorStatistics(1, @total, @successful, @last_date, @level)');
+          $stats = DB::select('SELECT @total as total, @successful as successful, @last_date as last_date, @level as level')[0];
+          
+          echo "User ID 1 Statistics:\n";
+          echo "- Total Registrations: {$stats->total}\n";
+          echo "- Successful Donations: {$stats->successful}\n";
+          echo "- Last Donation: {$stats->last_date}\n";
+          echo "- Donor Level: {$stats->level}\n";
+      } catch (Exception $e) {
+          echo "Error testing stored procedure: " . $e->getMessage() . "\n";
+      }
+      
+      echo "========================\n";
   }
 }

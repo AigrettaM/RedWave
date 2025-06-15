@@ -41,9 +41,9 @@ Route::group(['middleware'=> 'auth'], function () {
         $user = auth()->user();
         
         if ($user->role === 'admin') {
-            return redirect('/admin/dashboard'); // ← Gunakan URL langsung, bukan route name
+            return redirect('/admin/dashboard'); 
         } else {
-            return redirect()->route('home');
+            return redirect()->route('/profile');
         }
     })->name('dashboard');
     
