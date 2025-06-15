@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             EventSeeder::class,
             ProfileSeeder::class,
             LokasiSeeder::class,
+            BloodStockSeeder::class,
         ]);
     }
 }

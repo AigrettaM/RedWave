@@ -1,23 +1,40 @@
 <?php
+// app/Http/Controllers/HomeController.php
 
 namespace App\Http\Controllers;
 
+use App\Models\BloodStock;
+use App\Models\Profile;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
+        // Mendapatkan data analytics yang menggabungkan stok dan statistik donor
+        $bloodAnalytics = BloodStock::getBloodAnalytics();
         
-        // Cek role user
-        if ($user->role === 'admin') {
-            // Redirect admin ke dashboard admin
-            return redirect()->route('admin.admin');
-        }
+        // Mendapatkan stok kritis untuk alert
+        $criticalStocks = BloodStock::getCriticalStock();
         
-        // User biasa tetap ke home
-        return view('user.home');
+        // Mendapatkan detail stok untuk debugging
+        $detailedStocks = BloodStock::getDetailedStock();
+        
+        // Mendapatkan total donor terdaftar
+        $totalDonors = Profile::whereNotNull('blood_type')->count();
+        
+        // Mendapatkan statistik donor per golongan darah
+        $donorStatistics = BloodStock::getDonorStatistics();
+        
+        // Debug: dump data untuk melihat apa yang sebenarnya diambil
+        // dd($bloodAnalytics, $detailedStocks);
+        
+        return view('welcome', compact(
+            'bloodAnalytics', 
+            'criticalStocks', 
+            'totalDonors', 
+            'donorStatistics',
+            'detailedStocks'
+        ));
     }
 }

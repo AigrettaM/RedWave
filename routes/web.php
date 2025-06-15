@@ -19,9 +19,7 @@ use App\Http\Controllers\LokasiController;
 */
 
 // Home route
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [HomeController::class, 'index'])->name('welcome');
 
 // Public Article routes (bisa diakses semua orang)
 Route::get('/article', [ArticleController::class, 'index'])->name('article.index');
@@ -100,6 +98,18 @@ Route::middleware('auth')->prefix('donor')->name('donor.')->group(function () {
 });
 
 
+// Admin routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Donor Management
+    Route::prefix('donors')->name('donors.')->group(function () {
+        Route::get('/export/data', [DonorController::class, 'adminExport'])->name('export');
+        Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
+        Route::get('/{donor}', [DonorController::class, 'adminShow'])->name('show');
+        Route::put('/admin/donors/{donor}/status', [DonorController::class, 'adminUpdateStatus'])->name('admin.donors.updateStatus');
+        Route::post('/{donor}/complete', [DonorController::class, 'adminComplete'])->name('complete');
+    });
+});
 
 Route::prefix('informasi')->group(function () {
     Route::get('/events', [EventController::class, 'index'])->name('events.index');

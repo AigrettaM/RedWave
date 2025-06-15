@@ -1,4 +1,5 @@
 <?php
+// database/migrations/2025_06_15_create_blood_stocks_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
