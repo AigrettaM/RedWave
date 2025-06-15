@@ -43,6 +43,13 @@
                     </a>
                 </li>
 
+                 <li>
+                    <a href="/admin/events" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('admin.logs') ? 'bg-red-700' : '' }}">
+                        <i class="fas fa-clipboard-list mr-3"></i>
+                        Event
+                    </a>
+                </li>
+
                 <!-- Logout untuk Admin -->
                 <li>
                     <div class="px-4 py-2">

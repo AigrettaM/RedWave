@@ -1,148 +1,161 @@
 {{-- resources/views/informasi/events/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Event - PMI Kota Bandung')
+@section('title', 'Events - HMTI UNKHAIR')
 
 @section('content')
-<!-- Hero Section -->
-<section class="bg-gradient-to-r from-red-600 to-red-800 text-white py-16">
-    <div class="container mx-auto px-4">
-        <div class="max-w-4xl mx-auto text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-6">Event PMI Kota Bandung</h1>
-            <p class="text-xl md:text-2xl mb-8 text-red-100">
-                Bergabunglah dalam berbagai kegiatan kemanusiaan dan sosial bersama PMI Kota Bandung
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="{{ route('events.create') }}" 
-                   class="bg-white text-red-600 hover:bg-red-50 px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center">
-                    <i class="fas fa-plus mr-2"></i>
-                    Ajukan Event
-                </a>
-                <a href="#events-list" 
-                   class="border-2 border-white text-white hover:bg-white hover:text-red-600 px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center">
-                    <i class="fas fa-calendar-alt mr-2"></i>
-                    Lihat Event
-                </a>
+<div class="min-h-screen bg-gray-50">
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-red-600 to-red-800 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Events Redwave</h1>
+                <p class="text-xl text-red-100 max-w-3xl mx-auto">
+                    Ikuti berbagai kegiatan menarik 
+                </p>
             </div>
         </div>
     </div>
-</section>
 
-<!-- Events List -->
-<section id="events-list" class="py-16 bg-gray-50">
-    <div class="container mx-auto px-4">
-        <div class="max-w-6xl mx-auto">
-            <!-- Section Header -->
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Event Mendatang</h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Ikuti berbagai kegiatan menarik yang diselenggarakan oleh PMI Kota Bandung
-                </p>
+    <!-- Content Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Action Bar -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
+            <div class="flex items-center space-x-4">
+                <h2 class="text-2xl font-bold text-gray-800">Upcoming Events</h2>
+                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                    {{ $events->total() }} Events
+                </span>
             </div>
+            
+            <a href="{{ route('events.create') }}" 
+               class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-flex items-center shadow-lg hover:shadow-xl">
+                <i class="fas fa-plus mr-2"></i>
+                Ajukan Event
+            </a>
+        </div>
 
-            @if(session('success'))
-                <div class="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-lg mb-8 flex items-center max-w-2xl mx-auto">
-                    <i class="fas fa-check-circle mr-3"></i>
-                    <div>
-                        <p class="font-medium">{{ session('success') }}</p>
-                    </div>
+        <!-- Success Message -->
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6" role="alert">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span>{{ session('success') }}</span>
                 </div>
-            @endif
+            </div>
+        @endif
 
-            <!-- Events Grid -->
-            @if($events->count() > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    @foreach($events as $event)
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+        <!-- Events Grid -->
+        @if($events->count() > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach($events as $event)
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                         <!-- Event Image -->
-                        <div class="relative h-48 bg-gray-200">
+                        <div class="relative h-48 overflow-hidden">
                             @if($event->image)
-                                <img src="{{ asset('storage/events/' . $event->image) }}" 
-                                     alt="{{ $event->title }}" 
-                                     class="w-full h-full object-cover">
+                                @if(str_starts_with($event->image, '#'))
+                                    <div class="w-full h-full" style="background-color: {{ $event->image }}"></div>
+                                @else
+                                    <img src="{{ asset('storage/events/' . $event->image) }}" 
+                                         alt="{{ $event->title }}" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                @endif
                             @else
-                                <div class="w-full h-full flex items-center justify-center">
-                                    <i class="fas fa-calendar-alt text-gray-400 text-4xl"></i>
+                                <div class="w-full h-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                                    <i class="fas fa-calendar-alt text-white text-4xl"></i>
                                 </div>
                             @endif
                             
                             <!-- Date Badge -->
-                            <div class="absolute top-4 left-4 bg-red-600 text-white px-3 py-2 rounded-lg text-center">
-                                <div class="text-xs font-medium">{{ $event->event_date->format('M') }}</div>
-                                <div class="text-lg font-bold">{{ $event->event_date->format('d') }}</div>
+                            <div class="absolute top-4 left-4 bg-white rounded-lg px-3 py-2 shadow-lg">
+                                <div class="text-center">
+                                    <div class="text-red-600 font-bold text-lg">
+                                        {{ \Carbon\Carbon::parse($event->event_date)->format('d') }}
+                                    </div>
+                                    <div class="text-gray-600 text-xs uppercase">
+                                        {{ \Carbon\Carbon::parse($event->event_date)->format('M') }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Event Content -->
                         <div class="p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-3 line-clamp-2">{{ $event->title }}</h3>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                {{ $event->title }}
+                            </h3>
                             
-                            <!-- Event Info -->
-                            <div class="space-y-2 mb-4 text-sm text-gray-600">
-                                <div class="flex items-center">
-                                    <i class="fas fa-clock mr-2 text-gray-400"></i>
-                                    {{ $event->formatted_time }}
+                            <p class="text-gray-600 mb-4 line-clamp-3">
+                                {{ Str::limit($event->description, 120) }}
+                            </p>
+
+                            <!-- Event Details -->
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center text-gray-600 text-sm">
+                                    <i class="fas fa-calendar mr-2 text-red-500"></i>
+                                    {{ \Carbon\Carbon::parse($event->event_date)->format('d F Y') }}
                                 </div>
-                                <div class="flex items-center">
-                                    <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                                
+                                @if($event->start_time)
+                                    <div class="flex items-center text-gray-600 text-sm">
+                                        <i class="fas fa-clock mr-2 text-red-500"></i>
+                                        {{ \Carbon\Carbon::parse($event->start_time)->format('H:i') }}
+                                        @if($event->end_time)
+                                            - {{ \Carbon\Carbon::parse($event->end_time)->format('H:i') }}
+                                        @endif
+                                    </div>
+                                @endif
+                                
+                                <div class="flex items-center text-gray-600 text-sm">
+                                    <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>
                                     {{ Str::limit($event->location, 30) }}
                                 </div>
+                                
                                 @if($event->max_participants)
-                                <div class="flex items-center">
-                                    <i class="fas fa-users mr-2 text-gray-400"></i>
-                                    Maks. {{ $event->max_participants }} peserta
-                                </div>
+                                    <div class="flex items-center text-gray-600 text-sm">
+                                        <i class="fas fa-users mr-2 text-red-500"></i>
+                                        Max {{ $event->max_participants }} peserta
+                                    </div>
                                 @endif
                             </div>
 
-                            <!-- Description -->
-                            <p class="text-gray-700 mb-4 line-clamp-3">{{ Str::limit($event->description, 120) }}</p>
-
                             <!-- Action Button -->
                             <a href="{{ route('events.show', $event) }}" 
-                               class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center justify-center">
-                                <i class="fas fa-info-circle mr-2"></i>
+                               class="block w-full bg-red-600 hover:bg-red-700 text-white text-center py-3 rounded-lg font-medium transition-colors">
                                 Lihat Detail
                             </a>
                         </div>
                     </div>
-                    @endforeach
-                </div>
-            @else
-                <!-- Empty State -->
-                <div class="text-center py-16">
-                    <div class="max-w-md mx-auto">
-                        <i class="fas fa-calendar-alt text-gray-300 text-6xl mb-6"></i>
-                        <h3 class="text-xl font-medium text-gray-800 mb-4">Belum Ada Event</h3>
-                        <p class="text-gray-600 mb-8">Saat ini belum ada event yang tersedia. Silakan ajukan event Anda atau periksa kembali nanti.</p>
-                        <a href="{{ route('events.create') }}" 
-                           class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-flex items-center">
-                            <i class="fas fa-plus mr-2"></i>
-                            Ajukan Event
-                        </a>
+                @endforeach
+            </div>
+
+            <!-- Pagination -->
+            @if($events->hasPages())
+                <div class="mt-12 flex justify-center">
+                    <div class="bg-white rounded-lg shadow-lg p-4">
+                        {{ $events->links() }}
                     </div>
                 </div>
             @endif
-        </div>
+        @else
+            <!-- Empty State -->
+            <div class="text-center py-16">
+                <div class="max-w-md mx-auto">
+                    <div class="bg-gray-100 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-calendar-alt text-gray-400 text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Belum Ada Event</h3>
+                    <p class="text-gray-600 mb-8">Saat ini belum ada event yang tersedia. Silakan ajukan event Anda atau periksa kembali nanti.</p>
+                    <a href="{{ route('events.create') }}" 
+                       class="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-medium transition-colors inline-flex items-center shadow-lg hover:shadow-xl">
+                        <i class="fas fa-plus mr-2"></i>
+                        Ajukan Event Pertama
+                    </a>
+                </div>
+            </div>
+        @endif
     </div>
-</section>
-
-<!-- CTA Section -->
-<section class="py-16 bg-red-600 text-white">
-    <div class="container mx-auto px-4">
-        <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-3xl md:text-4xl font-bold mb-6">Punya Ide Event?</h2>
-            <p class="text-xl mb-8 text-red-100">
-                Ajukan event Anda dan mari bersama-sama membangun kegiatan yang bermanfaat untuk masyarakat
-            </p>
-            <a href="{{ route('events.create') }}" 
-               class="bg-white text-red-600 hover:bg-red-50 px-8 py-4 rounded-lg font-semibold text-lg transition-colors inline-flex items-center">
-                <i class="fas fa-lightbulb mr-3"></i>
-                Ajukan Event Sekarang
-            </a>
-        </div>
-    </div>
-</section>
+</div>
 
 <style>
 .line-clamp-2 {
@@ -159,5 +172,4 @@
     overflow: hidden;
 }
 </style>
-
 @endsection

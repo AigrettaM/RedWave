@@ -7,15 +7,17 @@ use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class EventController extends Controller
 {
     public function index()
     {
+        // Ganti get() dengan paginate() untuk mendukung pagination
         $events = Event::approved()
             ->where('event_date', '>=', now()->toDateString())
             ->orderBy('event_date', 'asc')
-            ->get();
+            ->paginate(9); // 9 events per halaman (3x3 grid)
             
         return view('informasi.events.index', compact('events'));
     }
@@ -140,5 +142,82 @@ class EventController extends Controller
                 ->withInput()
                 ->withErrors(['error' => 'Gagal menyimpan event: ' . $e->getMessage()]);
         }
+    }
+
+    // Method tambahan untuk admin
+    public function admin()
+    {
+        $events = Event::orderBy('created_at', 'desc')->paginate(10);
+        return view('admin.events.index', compact('events'));
+    }
+
+    public function approve(Event $event)
+    {
+        $event->update(['status' => 'approved']);
+        return redirect()->back()->with('success', 'Event berhasil disetujui.');
+    }
+
+    public function reject(Event $event)
+    {
+        $event->update(['status' => 'rejected']);
+        return redirect()->back()->with('success', 'Event ditolak.');
+    }
+
+    public function edit(Event $event)
+    {
+        return view('informasi.events.edit', compact('event'));
+    }
+
+    public function update(Request $request, Event $event)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'content' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'location' => 'required|string|max:255',
+            'event_date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required|after:start_time',
+            'max_participants' => 'nullable|integer|min:1',
+            'contact_person' => 'nullable|string|max:255',
+            'contact_phone' => 'nullable|string|max:20',
+            'submitted_by' => 'required|string|max:255',
+            'submitted_email' => 'required|email|max:255',
+            'submitted_phone' => 'nullable|string|max:20',
+        ]);
+
+        $data = $request->all();
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists and it's not a color code
+            if ($event->image && !str_starts_with($event->image, '#') && Storage::exists('public/events/' . $event->image)) {
+                Storage::delete('public/events/' . $event->image);
+            }
+
+            $image = $request->file('image');
+            $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+            $image->storeAs('public/events', $imageName);
+            $data['image'] = $imageName;
+        }
+
+        $event->update($data);
+
+        return redirect()->route('events.show', $event)
+                        ->with('success', 'Event berhasil diperbarui.');
+    }
+
+    public function destroy(Event $event)
+    {
+        // Delete image if exists and it's not a color code
+        if ($event->image && !str_starts_with($event->image, '#') && Storage::exists('public/events/' . $event->image)) {
+            Storage::delete('public/events/' . $event->image);
+        }
+
+        $event->delete();
+
+        return redirect()->route('events.index')
+                        ->with('success', 'Event berhasil dihapus.');
     }
 }

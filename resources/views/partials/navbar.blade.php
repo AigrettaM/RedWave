@@ -21,7 +21,7 @@
                                 <a href="/article" class="hover:text-red-800">Article</a>
                             </li>
                             <li class="px-4 py-2 hover:bg-gray-100 {{ request()->is('event') ? 'border-b-2 border-red-900 bg-red-50' : '' }}">
-                                <a href="/event" class="hover:text-red-800">Event</a>
+                                <a href="/informasi/events" class="hover:text-red-800">Event</a>
                             </li>
                             <li class="px-4 py-2 hover:bg-gray-100 {{ request()->is('alur-donor') ? 'border-b-2 border-red-900 bg-red-50' : '' }}">
                                 <a href="/alur-donor" class="hover:text-red-800">Alur Donor Darah</a>

@@ -150,11 +150,6 @@
                                             title="Lihat Detail">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button onclick="editUser({{ $profile->id }})" 
-                                            class="text-green-600 hover:text-green-800 transition-colors p-1" 
-                                            title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
                                     <button onclick="deleteUser({{ $profile->id }}, '{{ $profile->name }}')" 
                                             class="text-red-600 hover:text-red-800 transition-colors p-1" 
                                             title="Hapus">

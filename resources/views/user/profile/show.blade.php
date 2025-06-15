@@ -355,7 +355,6 @@
                             <ul class="mt-2 space-y-1">
                                 <li>• Mendaftar sebagai donor darah</li>
                                 <li>• Melihat jadwal donor</li>
-                                <li>• Mendapat notifikasi kebutuhan darah</li>
                             </ul>
                         </div>
                     </div>
