@@ -3,8 +3,8 @@
     <div class="p-6 border-b border-red-500">
         <div class="flex items-center justify-center">
             <a href="/" class="flex items-center space-x-2">    
-                <img src="{{ asset('image/logo-no-bg.png') }}" alt="logo" class="h-16" />
-                <img src="{{ asset('image/Red-Wave.png') }}" alt="logo2" class="h-14"/>
+                <img src="{{ asset('image/logo-no-bg.png') }}" alt="logo" class="h-10" />
+                <img src="{{ asset('image/Red-Wave.png') }}" alt="logo2" class="h-12"/>
             </a>
         </div>
     </div>
@@ -16,14 +16,14 @@
             <!-- Menu khusus untuk Admin -->
             @if(Auth::check() && Auth::user()->role === 'admin')
                 <li>
-                    <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('users.*') ? 'bg-red-700' : '' }}">
+                    <a href="{{ route('profiles.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('users.*') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-users mr-3"></i>
                         Users
                     </a>
                 </li>
 
                 <li>
-                    <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('analytics') ? 'bg-red-700' : '' }}">
+                    <a href="{{ route('donor.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('analytics') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-chart-bar mr-3"></i>
                         Data Donor
                     </a>
@@ -39,7 +39,14 @@
                 <li>
                     <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('admin.logs') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-clipboard-list mr-3"></i>
-                        System Logs
+                        Artikel
+                    </a>
+                </li>
+
+                 <li>
+                    <a href="/admin/events" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('admin.logs') ? 'bg-red-700' : '' }}">
+                        <i class="fas fa-clipboard-list mr-3"></i>
+                        Event
                     </a>
                 </li>
 
@@ -63,14 +70,14 @@
                 </li>
 
                 <li>
-                    <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
+                    <a href="/donor" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-shopping-bag mr-3"></i>
                         Donor
                     </a>
                 </li>
 
                 <li>
-                    <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.history') ? 'bg-red-700' : '' }}">
+                    <a href="/donor/history" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.history') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-history mr-3"></i>
                         Riwayat Donor
                     </a>

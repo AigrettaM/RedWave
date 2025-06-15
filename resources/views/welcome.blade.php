@@ -4,8 +4,8 @@
 
 @section('content')
 
-<div class="pt-16">
-    <div class="pt-6">
+<div>
+    <div class="pt-24">
         @include('partials.carousel')
     </div>
 

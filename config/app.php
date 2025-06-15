@@ -163,11 +163,13 @@ return [
         /*
          * Application Service Providers...
          */
+        BotMan\BotMan\BotManServiceProvider::class,
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        BotMan\BotMan\BotManServiceProvider::class,
     ])->toArray(),
 
     /*
