@@ -408,17 +408,42 @@ function filterDonors() {
     });
 }
 
-// View donor details
 function viewDonor(donorId) {
     document.getElementById('viewModal').classList.remove('hidden');
     document.getElementById('viewContent').innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i></div>';
     
     fetch(`/admin/donors/${donorId}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.error) {
-                document.getElementById('viewContent').innerHTML = `<div class="text-center py-8 text-red-600">${data.error}</div>`;
-                return;
+                throw new Error(data.error);
+            }
+            
+            let healthAnswersHtml = '';
+            if (data.donor.health_questions) {
+                try {
+                    const healthQuestions = typeof data.donor.health_questions === 'string' 
+                        ? JSON.parse(data.donor.health_questions) 
+                        : data.donor.health_questions;
+                    
+                    healthAnswersHtml = `
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800 mb-2">Jawaban Kesehatan</h4>
+                            <div class="text-sm text-blue-700 space-y-1">
+                                ${Object.entries(healthQuestions).map(([key, value]) => 
+                                    `<div><strong>${key}:</strong> ${value}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                } catch (e) {
+                    console.error('Error parsing health questions:', e);
+                }
             }
             
             let html = `
@@ -443,16 +468,7 @@ function viewDonor(donorId) {
                         </div>
                     </div>
                     
-                    ${data.donor.health_answers ? `
-                        <div class="bg-blue-50 rounded-lg p-4">
-                            <h4 class="font-semibold text-blue-800 mb-2">Jawaban Kesehatan</h4>
-                            <div class="text-sm text-blue-700">
-                                ${Object.entries(JSON.parse(data.donor.health_answers)).map(([key, value]) => 
-                                    `<div><strong>${key}:</strong> ${value}</div>`
-                                ).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
+                    ${healthAnswersHtml}
                     
                     ${data.donor.notes ? `
                         <div class="bg-green-50 rounded-lg p-4">
@@ -473,9 +489,11 @@ function viewDonor(donorId) {
             document.getElementById('viewContent').innerHTML = html;
         })
         .catch(error => {
-            document.getElementById('viewContent').innerHTML = '<div class="text-center py-8 text-red-600">Gagal memuat detail</div>';
+            console.error('Error:', error);
+            document.getElementById('viewContent').innerHTML = `<div class="text-center py-8 text-red-600">Gagal memuat detail: ${error.message}</div>`;
         });
 }
+
 
 // Approve donor
 function approveDonor(donorId) {
@@ -504,26 +522,57 @@ document.getElementById('completeForm').addEventListener('submit', function(e) {
     const donationDate = document.getElementById('donationDate').value;
     const notes = document.getElementById('completeNotes').value;
     
-    fetch(`/admin/donors/${donorId}/complete`, {
-        method: 'POST',
+    // Cek CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        alert('CSRF token tidak ditemukan. Refresh halaman dan coba lagi.');
+        return;
+    }
+    
+    // Disable submit button untuk prevent double submit
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Memproses...';
+    
+    fetch(`/admin/donors/${donorId}/status`, {
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+            'Accept': 'application/json'
         },
         body: JSON.stringify({
+            status: 'completed',
             donation_date: donationDate,
             notes: notes
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
+            closeModal('completeModal');
+            alert('Donor berhasil ditandai selesai!');
             location.reload();
         } else {
-            alert('Gagal menandai donor selesai');
+            throw new Error(data.message || 'Unknown error');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Gagal menandai donor selesai: ' + error.message);
+    })
+    .finally(() => {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Tandai Selesai';
     });
 });
+
 
 // Handle reject form
 document.getElementById('rejectForm').addEventListener('submit', function(e) {

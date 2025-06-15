@@ -1,40 +1,44 @@
 <?php
+// database/seeders/UserSeeder.php
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-        // Create Admin User
+        // Admin utama
         User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
+            'name' => 'Administrator',
+            'email' => 'admin@kedungbanteng.id',
+            'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'role' => 'admin',
-            'email_verified_at' => now(),
         ]);
 
-        // Create Regular User
+        // Staff/Operator
         User::create([
-            'name' => 'Regular User',
-            'email' => 'user@example.com',
+            'name' => 'Staff Desa',
+            'email' => 'staff@kedungbanteng.id',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+            'role' => 'staff',
+        ]);
+
+        // User biasa untuk testing
+        User::create([
+            'name' => 'Warga Desa',
+            'email' => 'warga@kedungbanteng.id',
+            'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'role' => 'user',
-            'email_verified_at' => now(),
         ]);
 
-        // Create more sample users
-        User::factory(10)->create([
-            'role' => 'user'
-        ]);
+        // Generate beberapa user lagi
+        User::factory(10)->create();
     }
 }

@@ -4,508 +4,393 @@
 @section('page-title', 'Manajemen Data User')
 
 @section('content')
-<div class="container mt-4">
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+<div class="container mx-auto px-4 py-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Alert Messages -->
+        @if(session('success'))
+            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6 flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                {{ session('success') }}
+                <button type="button" class="ml-auto text-green-600 hover:text-green-800" onclick="this.parentElement.style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        @endif
 
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+        @if(session('error'))
+            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                {{ session('error') }}
+                <button type="button" class="ml-auto text-red-600 hover:text-red-800" onclick="this.parentElement.style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        @endif
 
-    <!-- Header Section -->
-    <div class="text-center mb-4">
-        <h2 class="text-dark fw-bolder">Manajemen Data User</h2>
-    </div>
-
-    <!-- Search Section -->
-    <div class="row mb-4">
-        <div class="col-md-6 offset-md-6">
-            <div class="search-wrapper">
-                <div class="search-box">
-                    <div class="search-icon">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <input type="text" 
-                           class="search-input" 
-                           placeholder="Cari berdasarkan nama user..." 
-                           id="searchInput">
-                    <button class="clear-btn" type="button" id="clearSearch" title="Bersihkan pencarian">
-                        <i class="fas fa-times"></i>
+        <!-- Header dengan Info Singkat -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Data User</h1>
+                    <p class="text-gray-600">Total: <span class="font-semibold text-red-600">{{ $profiles->count() }}</span> pengguna terdaftar</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Export Excel
                     </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body table-responsive p-0">
-            <table class="table table-hover align-middle mb-0" id="userTable">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-center fw-semibold" style="width: 50px;">No</th>
-                        <th class="fw-semibold" style="width: 200px;">Nama</th>
-                        <th class="text-center fw-semibold" style="width: 120px;">Kode Donor</th>
-                        <th class="text-center fw-semibold" style="width: 100px;">Gol. Darah</th>
-                        <th class="text-center fw-semibold" style="width: 80px;">Rhesus</th>
-                        <th class="text-center fw-semibold" style="width: 120px;">Jenis Kelamin</th>
-                        <th class="fw-semibold" style="width: 140px;">Telepon</th>
-                        <th class="text-center fw-semibold" style="width: 140px;">Tgl Lahir</th>
-                        <th class="text-center fw-semibold" style="width: 100px;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($profiles as $index => $profile)
-                    <tr class="border-bottom table-row">
-                        <td class="text-center">
-                            <span class="badge bg-light text-dark fw-normal">{{ $index + 1 }}</span>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="avatar-circle bg-primary bg-opacity-10 me-3">
-                                    <i class="fas fa-user text-primary"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-semibold text-dark user-name">{{ $profile->name }}</div>
-                                    <small class="text-muted">ID: {{ $profile->id }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            @if($profile->donor_code)
-                                <span class="badge bg-success text-white">{{ $profile->donor_code }}</span>
-                            @else
-                                <span class="badge bg-secondary">Belum ada</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-danger text-white fw-bold">{{ $profile->blood_type }}</span>
-                        </td>
-                        <td class="text-center">
-                            <!-- DIPERBAIKI: Kondisi rhesus -->
-                            <span class="badge {{ $profile->rhesus == 'POSITIF' ? 'bg-success' : 'bg-warning' }} text-white">
-                                {{ $profile->rhesus == 'POSITIF' ? '+' : '-' }}
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge {{ $profile->gender == 'Laki-laki' ? 'bg-info' : 'bg-pink' }} text-white">
-                                <i class="fas {{ $profile->gender == 'Laki-laki' ? 'fa-mars' : 'fa-venus' }} me-1"></i>
-                                {{ $profile->gender }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-phone text-muted me-2"></i>
-                                <span class="text-nowrap">{{ $profile->telephone }}</span>
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            <div class="text-dark">{{ \Carbon\Carbon::parse($profile->birth_date)->format('d-m-Y') }}</div>
-                            <small class="text-muted">({{ \Carbon\Carbon::parse($profile->birth_date)->age }} tahun)</small>
-                        </td>
-                        <td class="text-center">
-                            <form action="{{ route('profiles.destroy', $profile->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data {{ $profile->name }}?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm delete-btn" title="Hapus Data">
-                                    <i class="fas fa-trash me-1"></i>Hapus
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr id="emptyState">
-                        <td colspan="9" class="text-center py-5">
-                            <div class="empty-state">
-                                <i class="fas fa-users text-muted mb-3" style="font-size: 3rem;"></i>
-                                <h5 class="text-muted">Tidak Ada Data User</h5>
-                                <p class="text-muted mb-0">Belum ada data user yang terdaftar dalam sistem</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- No Search Results -->
-    <div class="no-results-card" id="noSearchResults" style="display: none;">
-        <div class="text-center py-5">
-            <div class="no-results-icon">
-                <i class="fas fa-search"></i>
+        <!-- Search dan Filter Sederhana -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Search -->
+                <div class="md:col-span-2">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                               placeholder="Cari nama atau telepon..." 
+                               id="searchInput">
+                    </div>
+                </div>
+                
+                <!-- Filter Golongan Darah -->
+                <div>
+                    <select id="bloodFilter" class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        <option value="">Semua Golongan Darah</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="AB">AB</option>
+                        <option value="O">O</option>
+                    </select>
+                </div>
             </div>
-            <h5 class="text-muted mb-2">Tidak Ada Hasil Ditemukan</h5>
-            <p class="text-muted mb-3">
-                Tidak ditemukan user dengan kata kunci "<span id="searchKeyword" class="fw-bold"></span>"
-            </p>
-            <button class="btn btn-outline-primary btn-sm" onclick="clearSearch()">
-                <i class="fas fa-arrow-left me-1"></i>Kembali ke Semua Data
-            </button>
+        </div>
+
+        <!-- Tabel Data User -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200" id="userTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">No</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Gol. Darah</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rhesus</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Umur</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($profiles as $index => $profile)
+                        <tr class="hover:bg-gray-50 transition-colors table-row">
+                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                <span class="text-sm font-medium text-gray-900">{{ $index + 1 }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center">
+                                            <span class="text-white font-bold text-sm">{{ strtoupper(substr($profile->name, 0, 1)) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900 user-name">{{ $profile->name }}</div>
+                                        <div class="text-sm text-gray-500">ID: {{ $profile->id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-800">
+                                    {{ $profile->blood_type }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $profile->rhesus == 'POSITIF' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                    {{ $profile->rhesus == 'POSITIF' ? '+' : '-' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $profile->gender == 'Laki-laki' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800' }}">
+                                    <i class="fas {{ $profile->gender == 'Laki-laki' ? 'fa-mars' : 'fa-venus' }} mr-1"></i>
+                                    {{ substr($profile->gender, 0, 1) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 user-phone">{{ $profile->telephone }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($profile->birth_date)->age }} th</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                @if($profile->donor_code)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-tint mr-1"></i>
+                                        Donor
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                        <i class="fas fa-user mr-1"></i>
+                                        User
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <button onclick="viewUser({{ $profile->id }}, '{{ $profile->name }}')" 
+                                            class="text-blue-600 hover:text-blue-800 transition-colors p-1" 
+                                            title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="editUser({{ $profile->id }})" 
+                                            class="text-green-600 hover:text-green-800 transition-colors p-1" 
+                                            title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteUser({{ $profile->id }}, '{{ $profile->name }}')" 
+                                            class="text-red-600 hover:text-red-800 transition-colors p-1" 
+                                            title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr id="emptyState">
+                            <td colspan="9" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">Belum Ada Data</h3>
+                                    <p class="text-gray-500">Data user akan muncul di sini</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Info Footer -->
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>Data terakhir diperbarui: {{ now()->format('d/m/Y H:i') }}</p>
         </div>
     </div>
 </div>
 
-<style>
-.bg-pink {
-    background-color: #e91e63 !important;
-}
-
-/* Header Styles */
-.text-center h2 {
-    color: #2c3e50;
-    font-size: 2.5rem;
-    font-weight: 900 !important;
-    margin-bottom: 0;
-}
-
-/* Search Wrapper */
-.search-wrapper {
-    position: relative;
-}
-
-.search-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #ffffff;
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.search-box:focus-within {
-    border-color: #0d6efd;
-    box-shadow: 0 4px 16px rgba(13, 110, 253, 0.15);
-    transform: translateY(-1px);
-}
-
-.search-icon {
-    padding: 12px 16px;
-    color: #6c757d;
-    background: transparent;
-    border-right: 1px solid #e9ecef;
-}
-
-.search-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    padding: 12px 16px;
-    font-size: 0.95rem;
-    background: transparent;
-    color: #495057;
-}
-
-.search-input::placeholder {
-    color: #adb5bd;
-}
-
-.clear-btn {
-    background: none;
-    border: none;
-    padding: 12px 16px;
-    color: #6c757d;
-    cursor: pointer;
-    border-radius: 0 10px 10px 0;
-    transition: all 0.2s ease;
-}
-
-.clear-btn:hover {
-    background: #f8f9fa;
-    color: #dc3545;
-}
-
-.search-info {
-    margin-top: 8px;
-    padding-left: 4px;
-}
-
-/* No Results Card */
-.no-results-card {
-    background: #ffffff;
-    border: 2px dashed #dee2e6;
-    border-radius: 12px;
-    margin-top: 20px;
-    padding: 20px;
-}
-
-.no-results-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 20px;
-    background: #f8f9fa;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #adb5bd;
-    font-size: 2rem;
-}
-
-/* Table Enhancements */
-.avatar-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.empty-state {
-    padding: 2rem;
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(13, 110, 253, 0.03);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: all 0.2s ease;
-}
-
-.card {
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.badge {
-    font-size: 0.75rem;
-}
-
-.table th {
-    border-bottom: 2px solid #dee2e6;
-    padding: 12px 8px;
-    background-color: #f8f9fa !important;
-    font-weight: 600;
-}
-
-.table td {
-    padding: 12px 8px;
-    vertical-align: middle;
-}
-
-.delete-btn:hover {
-    transform: scale(1.05);
-    transition: all 0.2s ease;
-}
-
-.user-name {
-    color: #2c3e50 !important;
-}
-
-/* Highlight Search Results */
-.highlight {
-    background: linear-gradient(120deg, #fff3cd 0%, #fff3cd 100%);
-    background-size: 100% 0.2em;
-    background-repeat: no-repeat;
-    background-position: 0 88%;
-    font-weight: 600;
-    color: #856404;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .text-center h2 {
-        font-size: 2rem;
-    }
-    
-    .search-wrapper {
-        margin-bottom: 0;
-    }
-    
-    .table-responsive {
-        font-size: 0.875rem;
-    }
-    
-    .avatar-circle {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .delete-btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-    }
-    
-    .search-input {
-        padding: 10px 12px;
-        font-size: 0.9rem;
-    }
-    
-    .search-icon, .clear-btn {
-        padding: 10px 12px;
-    }
-}
-
-@media (max-width: 576px) {
-    .container {
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-    
-    .search-box {
-        border-radius: 8px;
-    }
-    
-    .results-summary {
-        padding: 10px 12px;
-    }
-}
-
-/* Animation for loading states */
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-.searching {
-    animation: pulse 1.5s ease-in-out infinite;
-}
-</style>
+<!-- Modal Detail User -->
+<div id="userModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="flex items-center justify-between p-6 border-b">
+                <h3 class="text-lg font-medium text-gray-900">Detail User</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6" id="modalContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
-    const clearButton = document.getElementById('clearSearch');
+    const bloodFilter = document.getElementById('bloodFilter');
     const table = document.getElementById('userTable');
     const tbody = table.getElementsByTagName('tbody')[0];
     const rows = Array.from(tbody.getElementsByTagName('tr'));
-    const noResultsCard = document.getElementById('noSearchResults');
-    const searchKeyword = document.getElementById('searchKeyword');
-    const emptyState = document.getElementById('emptyState');
-    
-    // Data rows (exclude empty state)
     const dataRows = rows.filter(row => row.cells.length > 1);
-    const totalUsers = dataRows.length;
 
-    // Search functionality with debouncing
-    let searchTimeout;
+    // Simple search function
     function performSearch() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            const filter = searchInput.value.toLowerCase().trim();
-            let visibleCount = 0;
-            let hasResults = false;
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const bloodType = bloodFilter.value;
+        let visibleCount = 0;
 
-            // Add searching animation
-            tbody.classList.add('searching');
-
-            dataRows.forEach((row, index) => {
-                const nameCell = row.querySelector('.user-name');
-                const nameText = nameCell.textContent.toLowerCase();
-                
-                if (filter === '' || nameText.includes(filter)) {
-                    row.style.display = '';
-                    visibleCount++;
-                    hasResults = true;
-                    
-                    // Update nomor urut
-                    const numberCell = row.cells[0].querySelector('.badge');
-                    numberCell.textContent = visibleCount;
-                    
-                    // Highlight hasil pencarian
-                    if (filter !== '') {
-                        highlightText(nameCell, filter);
-                    } else {
-                        removeHighlight(nameCell);
-                    }
-                } else {
-                    row.style.display = 'none';
-                    removeHighlight(nameCell);
-                }
-            });
-
-            // Remove searching animation
-            setTimeout(() => {
-                tbody.classList.remove('searching');
-            }, 300);
-
-            // DIPERBAIKI: Hapus bagian showingText yang error
-
-            // Show/hide no results message
-            if (filter !== '' && !hasResults) {
-                table.style.display = 'none';
-                searchKeyword.textContent = filter;
-                noResultsCard.style.display = 'block';
+        dataRows.forEach((row, index) => {
+            const nameText = row.querySelector('.user-name').textContent.toLowerCase();
+            const phoneText = row.querySelector('.user-phone').textContent.toLowerCase();
+            const rowBloodType = row.cells[2].textContent.trim();
+            
+            const matchesSearch = searchTerm === '' || nameText.includes(searchTerm) || phoneText.includes(searchTerm);
+            const matchesBlood = bloodType === '' || rowBloodType === bloodType;
+            
+            if (matchesSearch && matchesBlood) {
+                row.style.display = '';
+                visibleCount++;
+                // Update row number
+                row.cells[0].querySelector('span').textContent = visibleCount;
             } else {
-                table.style.display = '';
-                noResultsCard.style.display = 'none';
+                row.style.display = 'none';
             }
+        });
 
-            // Show/hide empty state
-            if (emptyState) {
-                emptyState.style.display = (totalUsers === 0 && filter === '') ? '' : 'none';
-            }
-        }, 150);
-    }
-
-    // Highlight function with improved styling
-    function highlightText(element, searchTerm) {
-        const originalText = element.getAttribute('data-original') || element.textContent;
-        element.setAttribute('data-original', originalText);
-        
-        const regex = new RegExp(`(${searchTerm})`, 'gi');
-        const highlightedText = originalText.replace(regex, '<span class="highlight">$1</span>');
-        element.innerHTML = highlightedText;
-    }
-
-    // Remove highlight function
-    function removeHighlight(element) {
-        const originalText = element.getAttribute('data-original');
-        if (originalText) {
-            element.textContent = originalText;
-            element.removeAttribute('data-original');
+        // Show/hide empty state
+        const emptyState = document.getElementById('emptyState');
+        if (emptyState) {
+            emptyState.style.display = (visibleCount === 0 && dataRows.length > 0) ? '' : 'none';
         }
-    }
-
-    // Clear search function
-    function clearSearch() {
-        searchInput.value = '';
-        performSearch();
-        searchInput.focus();
     }
 
     // Event listeners
     searchInput.addEventListener('input', performSearch);
-    
+    bloodFilter.addEventListener('change', performSearch);
+
+    // Clear search on Escape
     searchInput.addEventListener('keyup', function(e) {
         if (e.key === 'Escape') {
-            clearSearch();
+            this.value = '';
+            performSearch();
         }
     });
+});
 
-    // Show/hide clear button based on input
-    searchInput.addEventListener('input', function() {
-        clearButton.style.opacity = this.value ? '1' : '0.5';
+// User actions
+function viewUser(id, name) {
+    const modalContent = document.getElementById('modalContent');
+    
+    // Simple user detail display
+    modalContent.innerHTML = `
+        <div class="space-y-4">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white font-bold text-xl">${name.charAt(0).toUpperCase()}</span>
+                </div>
+                <h4 class="text-lg font-medium text-gray-900">${name}</h4>
+                <p class="text-sm text-gray-500">User ID: ${id}</p>
+            </div>
+            <div class="border-t pt-4">
+                <p class="text-sm text-gray-600 text-center">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Detail lengkap dapat dilihat di halaman edit
+                </p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="editUser(${id})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-edit mr-2"></i>
+                    Edit Data
+                </button>
+                <button onclick="closeModal()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('userModal').classList.remove('hidden');
+}
+
+function editUser(id) {
+    window.location.href = `/profiles/${id}/edit`;
+}
+
+function deleteUser(id, name) {
+    if (confirm(`Yakin ingin menghapus data ${name}?`)) {
+        // Create and submit delete form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/profiles/${id}`;
+        form.style.display = 'none';
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+        form.appendChild(csrfInput);
+        
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function closeModal() {
+    document.getElementById('userModal').classList.add('hidden');
+}
+
+// Export to Excel (CSV format)
+function exportToExcel() {
+    // Show loading
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengexport...';
+    button.disabled = true;
+    
+    // Get visible rows only
+    const table = document.getElementById('userTable');
+    const visibleRows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
+    
+    // CSV headers
+    let csvContent = 'No,Nama,ID,Golongan Darah,Rhesus,Jenis Kelamin,Telepon,Umur,Status\n';
+    
+    // Add data rows
+    visibleRows.forEach(row => {
+        if (row.cells.length > 1) { // Skip empty state row
+            const cols = row.cells;
+            const rowData = [
+                cols[0].textContent.trim(), // No
+                cols[1].querySelector('.user-name').textContent.trim(), // Nama
+                cols[1].querySelector('.text-gray-500').textContent.replace('ID: ', '').trim(), // ID
+                cols[2].textContent.trim(), // Golongan Darah
+                cols[3].textContent.trim(), // Rhesus
+                cols[4].textContent.includes('fa-mars') ? 'Laki-laki' : 'Perempuan', // Gender
+                cols[5].textContent.trim(), // Telepon
+                cols[6].textContent.trim(), // Umur
+                cols[7].textContent.includes('Donor') ? 'Donor Aktif' : 'User Biasa' // Status
+            ];
+            
+            // Escape quotes and wrap in quotes
+            const escapedData = rowData.map(field => `"${field.replace(/"/g, '""')}"`);
+            csvContent += escapedData.join(',') + '\n';
+        }
     });
+    
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const fileName = `data_user_${new Date().toISOString().split('T')[0]}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Reset button
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }, 1500);
+    
+    // Show success message
+    setTimeout(() => {
+        alert(`File ${fileName} berhasil didownload!`);
+    }, 500);
+}
 
-    clearButton.addEventListener('click', clearSearch);
-
-    // Global function for reset button
-    window.clearSearch = clearSearch;
-
-    // Auto-focus on search input
-    searchInput.focus();
-
-    // Initialize clear button opacity
-    clearButton.style.opacity = '0.5';
+// Close modal when clicking outside
+document.getElementById('userModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
 });
 </script>
+
 @endsection

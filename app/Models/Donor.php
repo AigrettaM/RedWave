@@ -20,14 +20,18 @@ class Donor extends Model
         'status',
         'donation_date',
         'next_eligible_date',
-        'notes'
+        'notes',
+        'approved_at',        // Tambahkan ini jika belum ada
+        'completed_at'        // Tambahkan ini jika belum ada
     ];
 
     protected $casts = [
         'health_questions' => 'array',
         'is_eligible' => 'boolean',
         'donation_date' => 'datetime',
-        'next_eligible_date' => 'datetime'
+        'next_eligible_date' => 'datetime',
+        'approved_at' => 'datetime',      // Tambahkan ini jika belum ada
+        'completed_at' => 'datetime'      // Tambahkan ini jika belum ada
     ];
 
     public function user()
@@ -47,7 +51,7 @@ class Donor extends Model
             return true; // Belum pernah donor
         }
 
-        $nextEligibleDate = $lastDonation->donation_date->addWeeks(2);
+        $nextEligibleDate = $lastDonation->donation_date->addWeeks(8);
         return Carbon::now()->gte($nextEligibleDate);
     }
 
@@ -63,7 +67,7 @@ class Donor extends Model
             return null;
         }
 
-        return $lastDonation->donation_date->addWeeks(2);
+        return $lastDonation->donation_date->addWeeks(8);
     }
 
     // Generate donor code

@@ -377,22 +377,59 @@ class DonorController extends Controller
     /**
      * Get donor detail (AJAX)
      */
-    public function detail($donorId)
-    {
-        $donor = Donor::with('user')->find($donorId);
-
-        if (!$donor || $donor->user_id !== auth()->id()) {
-            return response()->json(['error' => 'Data tidak ditemukan'], 404);
+public function detail(Donor $donor)
+{
+    // Pastikan user hanya bisa melihat donor milik sendiri
+    if ($donor->user_id !== auth()->id()) {
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak'
+            ], 403);
         }
-
-        $questions = DonorQuestion::whereIn('id', array_keys($donor->health_questions ?? []))->get();
-
-        return response()->json([
-            'donor' => $donor,
-            'questions' => $questions,
-            'answers' => $donor->health_questions
-        ]);
+        abort(403);
     }
+
+    // Jika request AJAX (untuk modal)
+    if (request()->wantsJson() || request()->ajax()) {
+        try {
+            $donor->load(['user']);
+            
+            return response()->json([
+                'success' => true,
+                'donor' => [
+                    'id' => $donor->id,
+                    'donor_code' => $donor->donor_code,
+                    'status' => $donor->status,
+                    'blood_type' => $donor->blood_type,
+                    'weight' => $donor->weight,
+                    'height' => $donor->height,
+                    'blood_pressure' => $donor->blood_pressure,
+                    'is_eligible' => $donor->is_eligible,
+                    'notes' => $donor->notes,
+                    'rejection_reason' => $donor->rejection_reason,
+                    'created_at' => $donor->created_at,
+                    'approved_at' => $donor->approved_at,
+                    'donation_date' => $donor->donation_date,
+                    'next_eligible_date' => $donor->next_eligible_date,
+                    'user' => [
+                        'name' => $donor->user->name,
+                        'email' => $donor->user->email,
+                        'phone' => $donor->user->phone ?? '-'
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem'
+            ], 500);
+        }
+    }
+
+    // Jika bukan AJAX, return view biasa
+    return view('donor.detail', compact('donor'));
+}
 
     /**
      * Generate certificate
@@ -412,13 +449,15 @@ class DonorController extends Controller
                 ->with('error', 'Sertifikat hanya tersedia setelah proses donor selesai di PMI.');
         }
 
-        return view('admin.donor.certificate', compact('donor'));
+        return view('user.donor.certificate', compact('donor'));
     }
 
     /**
      * Cancel donor process
      */
-    public function cancel()
+  
+    
+     public function cancel()
     {
         $donorId = session('donor_id');
         if ($donorId) {
@@ -503,40 +542,56 @@ class DonorController extends Controller
     /**
      * Admin - Update donor status
      */
-    public function adminUpdateStatus(Request $request, $donorId)
-    {
-        if (auth()->user()->role !== 'admin') {
-            return response()->json(['success' => false, 'error' => 'Akses ditolak'], 403);
-        }
+public function adminUpdateStatus(Request $request, $donorId)
+{
+    if (auth()->user()->role !== 'admin') {
+        return response()->json(['success' => false, 'error' => 'Akses ditolak'], 403);
+    }
 
-        $request->validate([
-            'status' => 'required|in:pending,approved,rejected,cancelled',
-            'rejection_reason' => 'required_if:status,rejected|string|max:500'
+    $request->validate([
+        'status' => 'required|in:pending,approved,rejected,cancelled,completed', // Tambahkan completed
+        'rejection_reason' => 'required_if:status,rejected|string|max:500',
+        'donation_date' => 'nullable|date', // Tambahkan validasi untuk donation_date
+        'notes' => 'nullable|string|max:1000' // Tambahkan validasi untuk notes
+    ]);
+    
+    try {
+        $donor = Donor::findOrFail($donorId);
+        
+        $donor->status = $request->status;
+        
+        if ($request->status === 'rejected') {
+            $donor->rejection_reason = $request->rejection_reason;
+        }
+        
+        // Handle completed status
+        if ($request->status === 'completed') {
+            $donor->donation_date = $request->donation_date ?? now();
+            $donor->completed_at = now();
+            if ($request->notes) {
+                $donor->notes = $request->notes;
+            }
+        }
+        
+        // Handle approved status
+        if ($request->status === 'approved') {
+            $donor->approved_at = now();
+        }
+        
+        $donor->save();
+        
+        return response()->json([
+            'success' => true, 
+            'message' => 'Status berhasil diupdate'
         ]);
         
-        try {
-            $donor = Donor::findOrFail($donorId);
-            
-            $donor->status = $request->status;
-            
-            if ($request->status === 'rejected') {
-                $donor->rejection_reason = $request->rejection_reason;
-            }
-            
-            $donor->save();
-            
-            return response()->json([
-                'success' => true, 
-                'message' => 'Status berhasil diupdate'
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Gagal mengupdate status'
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => 'Gagal mengupdate status: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Admin - Mark donor as completed
@@ -587,80 +642,76 @@ class DonorController extends Controller
     /**
      * Admin - Export donors data
      */
-    /**
- * Admin - Export donors data (Alternative)
- */
-public function adminExport()
-{
-    // Check admin access
-    if (auth()->user()->role !== 'admin') {
-        return redirect()->route('admin.donors.index')
-            ->with('error', 'Akses ditolak');
-    }
-
-    try {
-        $donors = Donor::with('user')->get();
-        
-        // Check if there are donors
-        if ($donors->isEmpty()) {
+    public function adminExport()
+    {
+        // Check admin access
+        if (auth()->user()->role !== 'admin') {
             return redirect()->route('admin.donors.index')
-                ->with('error', 'Tidak ada data donor untuk diekspor');
+                ->with('error', 'Akses ditolak');
         }
-        
-        $filename = 'donor_data_' . date('Y-m-d_H-i-s') . '.csv';
-        $filePath = storage_path('app/public/exports/' . $filename);
-        
-        // Create directory if not exists
-        if (!file_exists(dirname($filePath))) {
-            mkdir(dirname($filePath), 0755, true);
-        }
-        
-        $file = fopen($filePath, 'w');
-        
-        // Add BOM for UTF-8
-        fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Header CSV
-        fputcsv($file, [
-            'Kode Donor',
-            'Nama',
-            'Email',
-            'Status',
-            'Layak',
-            'Tanggal Daftar',
-            'Tanggal Donor',
-            'Donor Berikutnya',
-            'Catatan',
-            'Alasan Penolakan'
-        ]);
-        
-        // Data
-        foreach ($donors as $donor) {
-            fputcsv($file, [
-                $donor->donor_code ?? '',
-                $donor->user->name ?? '',
-                $donor->user->email ?? '',
-                $donor->status ?? '',
-                $donor->is_eligible ? 'Ya' : 'Tidak',
-                $donor->created_at ? $donor->created_at->format('d/m/Y H:i') : '',
-                $donor->donation_date ? $donor->donation_date->format('d/m/Y') : '',
-                $donor->next_eligible_date ? $donor->next_eligible_date->format('d/m/Y') : '',
-                $donor->notes ?? '',
-                $donor->rejection_reason ?? ''
-            ]);
-        }
-        
-        fclose($file);
-        
-        // Download file
-        return response()->download($filePath)->deleteFileAfterSend(true);
-        
-    } catch (\Exception $e) {
-        return redirect()->route('admin.donors.index')
-            ->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
-    }
-}
 
+        try {
+            $donors = Donor::with('user')->get();
+            
+            // Check if there are donors
+            if ($donors->isEmpty()) {
+                return redirect()->route('admin.donors.index')
+                    ->with('error', 'Tidak ada data donor untuk diekspor');
+            }
+            
+            $filename = 'donor_data_' . date('Y-m-d_H-i-s') . '.csv';
+            $filePath = storage_path('app/public/exports/' . $filename);
+            
+            // Create directory if not exists
+            if (!file_exists(dirname($filePath))) {
+                mkdir(dirname($filePath), 0755, true);
+            }
+            
+            $file = fopen($filePath, 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Header CSV
+            fputcsv($file, [
+                'Kode Donor',
+                'Nama',
+                'Email',
+                'Status',
+                'Layak',
+                'Tanggal Daftar',
+                'Tanggal Donor',
+                'Donor Berikutnya',
+                'Catatan',
+                'Alasan Penolakan'
+            ]);
+            
+            // Data
+            foreach ($donors as $donor) {
+                fputcsv($file, [
+                    $donor->donor_code ?? '',
+                    $donor->user->name ?? '',
+                    $donor->user->email ?? '',
+                    $donor->status ?? '',
+                    $donor->is_eligible ? 'Ya' : 'Tidak',
+                    $donor->created_at ? $donor->created_at->format('d/m/Y H:i') : '',
+                    $donor->donation_date ? $donor->donation_date->format('d/m/Y') : '',
+                    $donor->next_eligible_date ? $donor->next_eligible_date->format('d/m/Y') : '',
+                    $donor->notes ?? '',
+                    $donor->rejection_reason ?? ''
+                ]);
+            }
+            
+            fclose($file);
+            
+            // Download file
+            return response()->download($filePath)->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            return redirect()->route('admin.donors.index')
+                ->with('error', 'Gagal mengekspor data: ' . $e->getMessage());
+        }
+    }
 
     // ==========================================
     // HELPER METHODS
@@ -679,11 +730,17 @@ public function adminExport()
     }
 
     /**
-     * Evaluate Eligibility based on answers
+     * Evaluate Eligibility based on answers - PERBAIKAN UTAMA
      */
     private function evaluateEligibility($donor)
     {
         $answers = $donor->health_questions;
+        
+        // DEBUG: Log semua jawaban untuk troubleshooting
+        \Log::info('=== DEBUGGING DONOR ELIGIBILITY ===');
+        \Log::info('Donor ID: ' . $donor->id);
+        \Log::info('All Answers:', $answers);
+        
         $disqualifyingQuestions = DonorQuestion::where('is_disqualifying', true)->get();
         
         $isEligible = true;
@@ -695,20 +752,44 @@ public function adminExport()
             if (isset($answers[$questionKey])) {
                 $answer = $answers[$questionKey];
                 
+                // DEBUG: Log setiap pertanyaan dan jawaban
+                \Log::info("Question: {$question->question}");
+                \Log::info("Answer Key: {$questionKey}");
+                \Log::info("Answer Value: {$answer}");
+                
                 // Check if this answer should disqualify
                 if ($this->shouldDisqualify($question, $answer)) {
                     $isEligible = false;
                     $rejectionReasons[] = $question->question;
+                    \Log::info("DISQUALIFIED by: {$question->question}");
                 }
             }
         }
 
         // Additional checks
         $additionalChecks = $this->performAdditionalChecks($donor, $answers);
+        \Log::info('Additional Checks Result:', $additionalChecks);
+        
         if (!$additionalChecks['eligible']) {
             $isEligible = false;
             $rejectionReasons = array_merge($rejectionReasons, $additionalChecks['reasons']);
         }
+
+        // PERBAIKAN: Jika hanya ada 1 jawaban dan itu adalah "ya" untuk kesehatan, paksa eligible
+        if (count($answers) == 1) {
+            $firstAnswer = reset($answers);
+            $normalizedAnswer = $this->normalizeAnswer($firstAnswer);
+            
+            if ($normalizedAnswer === 'yes') {
+                \Log::info('OVERRIDE: Single health question answered YES - forcing eligible');
+                $isEligible = true;
+                $rejectionReasons = [];
+            }
+        }
+
+        \Log::info('Final Eligibility: ' . ($isEligible ? 'ELIGIBLE' : 'NOT ELIGIBLE'));
+        \Log::info('Rejection Reasons:', $rejectionReasons);
+        \Log::info('=== END DEBUGGING ===');
 
         $donor->update([
             'is_eligible' => $isEligible,
@@ -719,10 +800,34 @@ public function adminExport()
     }
 
     /**
-     * Method to determine if answer should disqualify
+     * Normalize answer untuk handle berbagai format
+     */
+    private function normalizeAnswer($answer)
+    {
+        $normalizedAnswer = strtolower(trim($answer));
+        
+        // Convert Indonesian answers to English
+        $answerMap = [
+            'ya' => 'yes',
+            'tidak' => 'no',
+            'yes' => 'yes',
+            'no' => 'no'
+        ];
+        
+        return $answerMap[$normalizedAnswer] ?? $normalizedAnswer;
+    }
+
+    /**
+     * Method to determine if answer should disqualify - DIPERBAIKI
      */
     private function shouldDisqualify($question, $answer)
     {
+        // Normalize answer
+        $normalizedAnswer = $this->normalizeAnswer($answer);
+        
+        // DEBUG: Log normalization
+        \Log::info("Original answer: {$answer}, Normalized: {$normalizedAnswer}");
+
         // Questions that disqualify if answered "YES"
         $disqualifyOnYes = [
             'Apakah Anda sedang minum antibiotik?',
@@ -772,12 +877,14 @@ public function adminExport()
         ];
 
         // Check disqualification based on "YES" answers
-        if (in_array($question->question, $disqualifyOnYes) && $answer === 'yes') {
+        if (in_array($question->question, $disqualifyOnYes) && $normalizedAnswer === 'yes') {
+            \Log::info("DISQUALIFIED: YES answer on: {$question->question}");
             return true;
         }
 
         // Check disqualification based on "NO" answers
-        if (in_array($question->question, $disqualifyOnNo) && $answer === 'no') {
+        if (in_array($question->question, $disqualifyOnNo) && $normalizedAnswer === 'no') {
+            \Log::info("DISQUALIFIED: NO answer on: {$question->question}");
             return true;
         }
 
@@ -785,7 +892,7 @@ public function adminExport()
     }
 
     /**
-     * Additional checks for donor eligibility
+     * Additional checks for donor eligibility - DIPERBAIKI
      */
     private function performAdditionalChecks($donor, $answers)
     {
@@ -808,14 +915,16 @@ public function adminExport()
         $profile = Profile::where('user_id', $donor->user_id)->first();
         if ($profile) {
             // Check age (17-65 years)
-            $age = Carbon::parse($profile->date_of_birth)->age;
-            if ($age < 17 || $age > 65) {
-                $eligible = false;
-                $reasons[] = 'Usia tidak memenuhi syarat (17-65 tahun)';
+            if ($profile->date_of_birth) {
+                $age = Carbon::parse($profile->date_of_birth)->age;
+                if ($age < 17 || $age > 65) {
+                    $eligible = false;
+                    $reasons[] = 'Usia tidak memenuhi syarat (17-65 tahun)';
+                }
             }
 
             // Check weight (minimum 45kg)
-            if ($profile->weight < 45) {
+            if ($profile->weight && $profile->weight < 45) {
                 $eligible = false;
                 $reasons[] = 'Berat badan kurang dari 45kg';
             }
@@ -841,4 +950,3 @@ public function adminExport()
         ];
     }
 }
-

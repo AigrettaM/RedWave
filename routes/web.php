@@ -8,6 +8,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DonorController;
 use App\Http\Controllers\BotManController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\AdminEventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,12 +61,8 @@ Route::middleware('auth')->prefix('donor')->name('donor.')->group(function () {
     Route::post('/start', [DonorController::class, 'start'])->name('start');
     
     // Health questions (3 steps)
-    Route::get('/questions/{step}', [DonorController::class, 'questions'])
-         ->name('questions')
-         ->where('step', '[1-3]');
-    Route::post('/questions/{step}', [DonorController::class, 'saveQuestions'])
-         ->name('questions.save')
-         ->where('step', '[1-3]');
+    Route::get('/questions/{step}', [DonorController::class, 'questions'])->name('questions')->where('step', '[1-3]');
+    Route::post('/questions/{step}', [DonorController::class, 'saveQuestions'])->name('questions.save')->where('step', '[1-3]');
     
     // Informed consent (only for eligible donors)
     Route::get('/consent', [DonorController::class, 'consent'])->name('consent');
@@ -97,7 +95,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/export/data', [DonorController::class, 'adminExport'])->name('export');
         Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
         Route::get('/{donor}', [DonorController::class, 'adminShow'])->name('show');
-        Route::put('/{donor}/status', [DonorController::class, 'adminUpdateStatus'])->name('status');
+        Route::put('/admin/donors/{donor}/status', [AdminDonorController::class, 'adminUpdateStatus'])->name('admin.donors.updateStatus');
         Route::post('/{donor}/complete', [DonorController::class, 'adminComplete'])->name('complete');
     });
 });
@@ -127,5 +125,20 @@ Route::post('/botman', function() {
     $botman->listen();
 });
 
-// Ganti route botman yang lama dengan ini:
+// Route botman
 Route::post('/botman', [BotManController::class, 'handle']);
+
+// Frontend Routes - event
+Route::prefix('informasi')->group(function () {
+    Route::get('/events', [EventController::class, 'index'])->name('events.index');
+    Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
+    Route::post('/events', [EventController::class, 'store'])->name('events.store');
+    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+});
+
+// Admin Routes (with auth middleware)
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('events', AdminEventController::class);
+    Route::post('events/{event}/approve', [AdminEventController::class, 'approve'])->name('events.approve');
+    Route::post('events/{event}/reject', [AdminEventController::class, 'reject'])->name('events.reject');
+});
