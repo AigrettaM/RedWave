@@ -138,15 +138,32 @@
     </section>
 
     <!-- Call to Action Card -->
-    <section class="text-center py-4 bg-gray-100 shadow-lg">
+    <!-- <section class="text-center py-4 bg-gray-100">
         <div class="max-w-10xl mx-auto bg-white rounded-xl shadow-lg p-10">
             <h2 class="text-3xl font-bold mb-6">Siap Menjadi Pahlawan?</h2>
-            <div class="space-x-4">
-                <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition">Donor Sekarang</button>
+            <p class="text-lg mb-6 opacity-90">
+                Jadilah pahlawan dengan mendonorkan darah Anda. Satu tindakan kecil, dampak besar!
+            </p>
+            <div class="space-x-4 p-2">
+                <a href="{{ url('login') }} "class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition">Donor Sekarang</a>
                 <a href="{{ url('lokasi') }}" class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-3 rounded-full font-semibold transition">Lihat Lokasi Terdekat</a>
             </div>
         </div>
-    </section>
+    </section> -->
+    <div class="bg-gradient-to-r from-red-600 to-red-800 text-white rounded-xl p-8 text-center mt-12">
+        <h3 class="text-2xl font-bold mb-4">Siap untuk Donor Darah?</h3>
+        <p class="text-lg mb-6 opacity-90">
+            Jadilah pahlawan dengan mendonorkan darah Anda. Satu tindakan kecil, dampak besar!
+        </p>
+        <div class="space-x-4">
+            <a href="{{ url('login') }}" class="bg-white text-red-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block">
+                Daftar Donor Sekarang
+            </a>
+            <a href="{{ url('lokasi') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-red-600 transition-colors inline-block">
+                Lihat Lokasi Terdekat
+            </a>
+        </div>
+    </div>
 </div>
 @endsection
 
