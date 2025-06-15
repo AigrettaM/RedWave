@@ -9,21 +9,29 @@
                 <div class="text-center text-white">
                     <h2 class="text-4xl font-bold mb-4">Bersama Kita Pasti Bisa</h2>
                     <p class="text-xl">Dukung program kemanusiaan untuk masa depan lebih baik</p>
-                    <button class="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition">Donor Sekarang</button>
+                    <a href="{{ url('login') }}">
+                        <button class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition">    
+                            Donor Sekarang
+                        </button>
+                    </a>
                 </div>
             </div>
         </div>
         
         <!-- Ke 2 -->
         <div class="w-full flex-shrink-0 relative">
-            <img src="{{ asset('image/foto 2.png') }}"
+            <img src="{{ asset('image/pmi/pmi1.png') }}"
                  alt="Pantai Tropis" 
                  class="w-full h-96 object-cover">
             <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
                 <div class="text-center text-white">
                     <h2 class="text-4xl font-bold mb-4">Tahun Berganti, Dedikasi tak berhenti</h2>
                     <p class="text-xl">Bergabunglah dengan kami, misi untuk membantu mereka yang membutuhkan</p>
-                    <button class="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition">Donor Sekarang</button>
+                    <a href="{{ url('login') }}">
+                        <button class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition">    
+                            Donor Sekarang
+                        </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -37,7 +45,11 @@
                 <div class="text-center text-white">
                     <h2 class="text-4xl font-bold mb-4">Harapan Baru di setiap langkah</h2>
                     <p class="text-xl">Setiap donasi memberikan harapan bagi mereka yang membutuhkan</p>
-                    <button class="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition">Donor Sekarang</button>
+                    <a href="{{ url('login') }}">
+                        <button class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition">    
+                            Donor Sekarang
+                        </button>
+                    </a>
                 </div>
             </div>
         </div>

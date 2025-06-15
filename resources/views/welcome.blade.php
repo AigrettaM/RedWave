@@ -36,15 +36,19 @@
 
             <!-- Explanation -->
             <div>
-            <h3 class="text-xl font-semibold mb-2">Kenapa Donor Darah Penting?</h3>
-            <p class="mb-4">Stok darah yang cukup sangat dibutuhkan untuk membantu pasien yang membutuhkan transfusi, seperti korban kecelakaan, pasien operasi, dan penderita penyakit tertentu.</p>
-            <ul class="list-disc pl-5 space-y-1">
-                <li><strong>A:</strong> 45 kantong</li>
-                <li><strong>B:</strong> 30 kantong</li>
-                <li><strong>O:</strong> 10 kantong <span class="text-red-600 font-bold">(Kritis!)</span></li>
-                <li><strong>AB:</strong> 25 kantong</li>
-            </ul>
-            <button class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition">Donor Sekarang</button>
+                <h3 class="text-xl font-semibold mb-2">Kenapa Donor Darah Penting?</h3>
+                <p class="mb-4">Stok darah yang cukup sangat dibutuhkan untuk membantu pasien yang membutuhkan transfusi, seperti korban kecelakaan, pasien operasi, dan penderita penyakit tertentu.</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><strong>A:</strong> 45 kantong</li>
+                    <li><strong>B:</strong> 30 kantong</li>
+                    <li><strong>O:</strong> 10 kantong <span class="text-red-600 font-bold">(Kritis!)</span></li>
+                    <li><strong>AB:</strong> 25 kantong</li>
+                </ul>
+                <a href="{{ url('login') }}">
+                    <button class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition">    
+                        Donor Sekarang
+                    </button>
+                </a>
             </div>
         </div>
         </div>
