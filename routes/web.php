@@ -32,8 +32,21 @@ Route::group(['middleware' => 'guest'], function () {
     Route::post('/login', [AuthController::class, 'loginPost'])->name('login');
 });
 
+// ✅ PERBAIKAN: Routes untuk user yang sudah login
 Route::group(['middleware'=> 'auth'], function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    
+    // ✅ Route dashboard umum - redirect berdasarkan role
+    Route::get('/dashboard', function() {
+        $user = auth()->user();
+        
+        if ($user->role === 'admin') {
+            return redirect('/admin/dashboard'); // ← Gunakan URL langsung, bukan route name
+        } else {
+            return redirect()->route('home');
+        }
+    })->name('dashboard');
+    
     Route::delete('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
@@ -92,16 +105,22 @@ Route::get('/botman/iframe', function() {
 Route::post('/botman', [BotManController::class, 'handle']);
 
 // ========================================
-// ADMIN ROUTES - PERBAIKAN UTAMA
+// ✅ ADMIN ROUTES - DIPERBAIKI INFINITE LOOP
 // ========================================
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
-    // Dashboard
+    // ✅ Dashboard - LANGSUNG RETURN VIEW (TIDAK ADA REDIRECT)
     Route::get('/dashboard', function() {
-        return view('admin.dashboard');
+        // Hitung statistik untuk dashboard
+        $totalUsers = \App\Models\User::count();
+        $totalDonors = \App\Models\Donor::count();
+        $totalEvents = \App\Models\Event::count();
+        $totalLokasi = \App\Models\Lokasi::count();
+        
+        return view('admin.dashboard', compact('totalUsers', 'totalDonors', 'totalEvents', 'totalLokasi'));
     })->name('dashboard');
     
-    // DONOR MANAGEMENT - DIPERBAIKI
+    // DONOR MANAGEMENT
     Route::prefix('donors')->name('donors.')->group(function () {
         Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
         Route::get('/export/data', [DonorController::class, 'adminExport'])->name('export');
