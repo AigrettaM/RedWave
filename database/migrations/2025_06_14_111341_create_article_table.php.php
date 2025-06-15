@@ -1,4 +1,5 @@
 <?php
+// database/migrations/xxxx_xx_xx_xxxxxx_create_articles_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -12,17 +13,27 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->text('excerpt');
+            $table->text('excerpt')->nullable();
             $table->longText('content');
-            $table->string('category');
             $table->string('featured_image')->nullable();
-            $table->string('author_name');
+            
+            // Author information
+            $table->string('author');
             $table->string('author_title')->nullable();
             $table->string('author_avatar')->nullable();
-            $table->boolean('is_published')->default(false);
+            
+            // Status and features
+            $table->enum('status', ['draft', 'published'])->default('draft');
             $table->boolean('is_featured')->default(false);
+            $table->string('category');
+            
+            // Timestamps
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
+            
+            // Additional fields
+            $table->json('tags')->nullable();
+            $table->unsignedInteger('views')->default(0);
         });
     }
 

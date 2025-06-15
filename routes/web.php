@@ -157,3 +157,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::put('/lokasis/{lokasi}', [LokasiController::class, 'update'])->name('lokasis.update');
     Route::delete('/lokasis/{lokasi}', [LokasiController::class, 'destroy'])->name('lokasis.destroy');
 });
+
+// Route untuk arikel (admin)
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/articles', [ArticleController::class, 'adminIndex'])->name('articles.index');
+    Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
+    Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
+    Route::get('/articles/{article}', [ArticleController::class, 'adminShow'])->name('articles.show');
+    Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
+    Route::put('/articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
+    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
+    Route::patch('/articles/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('articles.toggle-status');
+    Route::patch('/articles/{article}/toggle-featured', [ArticleController::class, 'toggleFeatured'])->name('articles.toggle-featured');
+});

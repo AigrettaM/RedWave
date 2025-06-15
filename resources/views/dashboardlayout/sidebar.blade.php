@@ -37,7 +37,7 @@
                 </li>
 
                 <li>
-                    <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('admin.logs') ? 'bg-red-700' : '' }}">
+                    <a href="{{ route('admin.articles.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('admin.logs') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-clipboard-list mr-3"></i>
                         Artikel
                     </a>
