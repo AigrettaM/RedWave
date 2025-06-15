@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DependentDropdownController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LokasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,3 +46,18 @@ Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->nam
 Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
 Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
 Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
+
+// Route untuk lokasi (admin)
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::resource('lokasis', LokasiController::class);
+});
+
+// Atau jika ingin lebih spesifik:
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/lokasis', [LokasiController::class, 'index'])->name('lokasis.index');
+    Route::get('/lokasis/create', [LokasiController::class, 'create'])->name('lokasis.create');
+    Route::post('/lokasis', [LokasiController::class, 'store'])->name('lokasis.store');
+    Route::get('/lokasis/{lokasi}/edit', [LokasiController::class, 'edit'])->name('lokasis.edit');
+    Route::put('/lokasis/{lokasi}', [LokasiController::class, 'update'])->name('lokasis.update');
+    Route::delete('/lokasis/{lokasi}', [LokasiController::class, 'destroy'])->name('lokasis.destroy');
+});

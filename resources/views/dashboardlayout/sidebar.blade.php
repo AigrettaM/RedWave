@@ -30,7 +30,7 @@
                 </li>
 
                 <li>
-                    <a href="/" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('reports.*') ? 'bg-red-700' : '' }}">
+                    <a href="/lokasis" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('reports.*') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-file-alt mr-3"></i>
                         Lokasi
                     </a>
