@@ -6,97 +6,317 @@ use Illuminate\Http\Request;
 use App\Models\Donor;
 use App\Models\DonorQuestion;
 use App\Models\Profile;
+use App\Models\Lokasi;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
-
 class DonorController extends Controller
 {
-    // ==========================================
-    // USER METHODS (Donor Registration)
-    // ==========================================
 
-    /**
-     * Step 1: Index/Check Eligibility
-     */
-    public function index()
-    {
-        $user = auth()->user();
+
+public function index()
+{
+    $user = Auth::user();
+    $profile = $user->profile;
+    
+    // Inisialisasi variabel umur
+    $userAge = null;
+    $isAgeEligible = true; // Default true jika tidak ada profile
+    $eligibleDate = null;
+    
+    // Cek umur jika profile ada dan ada birth_date
+    if ($profile && $profile->birth_date) {
+        $birthDate = Carbon::parse($profile->birth_date);
+        $userAge = $birthDate->age;
         
-        // PERBAIKAN: Jika admin, redirect ke dashboard admin
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.donors.index');
+        // Cek kelayakan umur (17-65 tahun)
+        $isAgeEligible = ($userAge >= 17 && $userAge <= 65);
+        
+        // Jika umur kurang dari 17, hitung kapan bisa donor
+        if ($userAge < 17) {
+            $eligibleDate = $birthDate->copy()->addYears(17);
+        }
+    }
+    
+    // Cek donor yang sedang berlangsung
+    $currentDonor = Donor::where('user_id', $user->id)
+        ->whereIn('status', ['pending', 'approved'])
+        ->first();
+    
+    // Cek donor terakhir
+    $lastDonation = Donor::where('user_id', $user->id)
+        ->whereIn('status', ['completed', 'rejected'])
+        ->orderBy('created_at', 'desc')
+        ->first();
+    
+    // Cek apakah bisa donor (gabungan semua syarat)
+    $canDonate = false;
+    $nextEligibleDate = null;
+    
+    if ($profile && $isAgeEligible) {
+        $canDonate = $this->canUserDonate($user->id);
+        if (!$canDonate) {
+            $nextEligibleDate = $this->getNextEligibleDate($user->id);
+        }
+    }
+    
+    // Progress tracking untuk donor yang sedang berlangsung
+    $currentStep = 0;
+    $progressPercentage = 0;
+    $currentStepName = '';
+    $currentStepDescription = '';
+    $nextStepRoute = null;
+    
+    if ($currentDonor) {
+        // Tentukan step berdasarkan progress donor
+        if (!$currentDonor->lokasi_id) {
+            $currentStep = 1;
+            $currentStepName = 'Pilih Lokasi';
+            $currentStepDescription = 'Pilih lokasi dan tanggal donor';
+            $nextStepRoute = route('donor.location', $currentDonor->id);
+        } elseif (empty($currentDonor->health_questions)) {
+            $currentStep = 2;
+            $currentStepName = 'Kuesioner Kesehatan';
+            $currentStepDescription = 'Isi kuesioner kesehatan (Tahap 1)';
+            $nextStepRoute = route('donor.questions', 1);
+        } elseif ($currentDonor->is_eligible === null) {
+            // Masih dalam proses kuesioner
+            $questionCount = count($currentDonor->health_questions ?? []);
+            if ($questionCount < 10) {
+                $currentStep = 2;
+                $currentStepName = 'Kuesioner Kesehatan';
+                $currentStepDescription = 'Isi kuesioner kesehatan (Tahap 1)';
+                $nextStepRoute = route('donor.questions', 1);
+            } elseif ($questionCount < 20) {
+                $currentStep = 3;
+                $currentStepName = 'Kuesioner Kesehatan';
+                $currentStepDescription = 'Isi kuesioner kesehatan (Tahap 2)';
+                $nextStepRoute = route('donor.questions', 2);
+            } else {
+                $currentStep = 4;
+                $currentStepName = 'Kuesioner Kesehatan';
+                $currentStepDescription = 'Isi kuesioner kesehatan (Tahap 3)';
+                $nextStepRoute = route('donor.questions', 3);
+            }
+        } elseif ($currentDonor->is_eligible && $currentDonor->status === 'pending') {
+            $currentStep = 5;
+            $currentStepName = 'Informed Consent';
+            $currentStepDescription = 'Baca dan setujui informed consent';
+            $nextStepRoute = route('donor.consent');
+        } elseif ($currentDonor->status === 'approved') {
+            $currentStep = 6;
+            $currentStepName = 'Menunggu Donor';
+            $currentStepDescription = 'Menunggu jadwal donor di PMI';
+            $nextStepRoute = null;
         }
         
-        // Check if user has profile
-        $profile = Profile::where('user_id', $user->id)->first();
-        if (!$profile) {
-            return redirect()->route('profile.form')
-                ->with('error', 'Anda harus melengkapi profile terlebih dahulu sebelum dapat mendonor.');
-        }
+        $progressPercentage = ($currentStep / 6) * 100;
+    }
+    
+    // Statistik donor untuk user
+    $donorStats = null;
+    if ($profile) {
+        $donorStats = [
+            'total' => Donor::where('user_id', $user->id)->count(),
+            'completed' => Donor::where('user_id', $user->id)->where('status', 'completed')->count(),
+            'cancelled' => Donor::where('user_id', $user->id)->where('status', 'rejected')->count(),
+            'points' => Donor::where('user_id', $user->id)->where('status', 'completed')->count() * 10,
+        ];
+    }
+    
+    // Cek apakah ada donor yang baru selesai (untuk notifikasi)
+    $recentCompletedDonor = Donor::where('user_id', $user->id)
+        ->where('status', 'completed')
+        ->where('updated_at', '>=', Carbon::now()->subDays(7))
+        ->orderBy('updated_at', 'desc')
+        ->first();
+    
+    return view('user.donor.index', compact(
+        'profile',
+        'currentDonor',
+        'lastDonation',
+        'canDonate',
+        'nextEligibleDate',
+        'userAge',
+        'isAgeEligible',
+        'eligibleDate',
+        'currentStep',
+        'progressPercentage',
+        'currentStepName',
+        'currentStepDescription',
+        'nextStepRoute',
+        'donorStats',
+        'recentCompletedDonor'
+    ));
+}
 
-        // Check if can donate again (minimum 2 weeks)
-        $canDonate = Donor::canDonateAgain($user->id);
-        $nextEligibleDate = Donor::getNextEligibleDate($user->id);
 
-        // Get last donation
-        $lastDonation = Donor::where('user_id', $user->id)
-            ->where('status', 'completed')
-            ->latest('donation_date')
-            ->first();
 
-        return view('user.donor.index', compact('profile', 'canDonate', 'nextEligibleDate', 'lastDonation'));
+/**
+ * Helper method: Dapatkan tanggal kapan bisa donor lagi
+ */
+private function getNextEligibleDate($userId)
+{
+    $lastDonation = Donor::where('user_id', $userId)
+        ->where('status', 'completed')
+        ->orderBy('donation_date', 'desc')
+        ->first();
+    
+    if ($lastDonation) {
+        return Carbon::parse($lastDonation->donation_date)->addDays(56);
+    }
+    
+    return null;
+}
+
+private function canUserDonate($userId)
+{
+    $lastDonation = Donor::where('user_id', $userId)
+        ->where('status', 'completed')
+        ->orderBy('donation_date', 'desc')
+        ->first();
+    
+    if (!$lastDonation) {
+        return true; // Belum pernah donor
+    }
+    
+    // Cek jarak minimal 2 minggu (14 hari)
+    $minInterval = Carbon::parse($lastDonation->donation_date)->addDays(14);
+    return Carbon::now()->greaterThanOrEqualTo($minInterval);
+}
+
+
+/**
+ * Step 2: Start Donation Process - PERBAIKAN: Buat donor record dulu
+ */
+public function start()
+{
+    $user = auth()->user();
+    
+    // PERBAIKAN: Jika admin, redirect ke dashboard admin
+    if ($user->role === 'admin') {
+        return redirect()->route('admin.donors.index');
+    }
+    
+    // Validation checks
+    $profile = Profile::where('user_id', $user->id)->first();
+    if (!$profile) {
+        return redirect()->route('donor.index')
+            ->with('error', 'Profile belum lengkap.');
     }
 
-    /**
-     * Step 2: Start Donation Process
-     */
-    public function start()
-    {
-        $user = auth()->user();
-        
-        // PERBAIKAN: Jika admin, redirect ke dashboard admin
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.donors.index');
-        }
-        
-        // Validation checks
-        $profile = Profile::where('user_id', $user->id)->first();
-        if (!$profile) {
-            return redirect()->route('donor.index')
-                ->with('error', 'Profile belum lengkap.');
-        }
+    if (!Donor::canDonateAgain($user->id)) {
+        return redirect()->route('donor.index')
+            ->with('error', 'Anda belum dapat mendonor lagi. Minimal jarak 2 minggu dari donor terakhir.');
+    }
 
-        if (!Donor::canDonateAgain($user->id)) {
-            return redirect()->route('donor.index')
-                ->with('error', 'Anda belum dapat mendonor lagi. Minimal jarak 2 minggu dari donor terakhir.');
-        }
+    // Check if there's already a pending donor session
+    $existingDonor = Donor::where('user_id', $user->id)
+        ->where('status', 'pending')
+        ->latest()
+        ->first();
 
-        // Check if there's already a pending donor session
-        $existingDonor = Donor::where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->latest()
-            ->first();
-
-        if ($existingDonor) {
+    if ($existingDonor) {
+        // Redirect ke step yang sesuai berdasarkan progress
+        if (!$existingDonor->lokasi_id) {
+            return redirect()->route('donor.location', $existingDonor->id)
+                ->with('info', 'Melanjutkan sesi donor yang belum selesai.');
+        } else {
             session(['donor_id' => $existingDonor->id]);
             return redirect()->route('donor.questions', 1)
                 ->with('info', 'Melanjutkan sesi donor yang belum selesai.');
         }
-
-        // Create new donor record
-        $donorCode = $this->generateDonorCode();
-        
-        $donor = Donor::create([
-            'user_id' => $user->id,
-            'donor_code' => $donorCode,
-            'health_questions' => [],
-            'status' => 'pending'
-        ]);
-
-        session(['donor_id' => $donor->id]);
-
-        return redirect()->route('donor.questions', 1);
     }
+
+    // PERBAIKAN: Buat donor record baru dulu
+    $donorCode = $this->generateDonorCode();
+    
+    $donor = Donor::create([
+        'user_id' => $user->id,
+        'donor_code' => $donorCode,
+        'health_questions' => [],
+        'status' => 'pending'
+    ]);
+
+    // Redirect ke pemilihan lokasi dengan donor ID
+    return redirect()->route('donor.location', $donor->id)
+        ->with('success', 'Proses donor dimulai. Silakan pilih lokasi dan tanggal donor.');
+}
+
+/**
+ * PERBAIKAN: Step 2a - Pilih Lokasi dan Tanggal
+ */
+public function location($donorId)
+{
+    $user = auth()->user();
+    
+    if ($user->role === 'admin') {
+        return redirect()->route('admin.donors.index');
+    }
+
+    // Validasi donor
+    $donor = Donor::where('id', $donorId)
+        ->where('user_id', $user->id)
+        ->where('status', 'pending')
+        ->first();
+
+    if (!$donor) {
+        return redirect()->route('donor.index')
+            ->with('error', 'Sesi donor tidak valid atau sudah berakhir.');
+    }
+
+    // Get active locations
+    $lokasis = Lokasi::aktif()->get();
+
+    return view('user.donor.location', compact('lokasis', 'donor'));
+}
+
+/**
+ * PERBAIKAN: Save Location and Date
+ */
+public function saveLocation(Request $request, $donorId)
+{
+    $user = auth()->user();
+    
+    if ($user->role === 'admin') {
+        return redirect()->route('admin.donors.index');
+    }
+
+    // Validasi donor
+    $donor = Donor::where('id', $donorId)
+        ->where('user_id', $user->id)
+        ->where('status', 'pending')
+        ->first();
+
+    if (!$donor) {
+        return redirect()->route('donor.index')
+            ->with('error', 'Sesi donor tidak valid atau sudah berakhir.');
+    }
+
+    $request->validate([
+        'lokasi_id' => 'required|exists:lokasis,id',
+        'alamat' => 'required|string|max:255',
+        'donation_date' => 'required|date|after_or_equal:today'
+    ], [
+        'lokasi_id.required' => 'Pilih lokasi donor',
+        'lokasi_id.exists' => 'Lokasi tidak valid',
+        'alamat.required' => 'Alamat harus diisi',
+        'donation_date.required' => 'Tanggal donor harus dipilih',
+        'donation_date.after_or_equal' => 'Tanggal donor tidak boleh kurang dari hari ini'
+    ]);
+
+    // Update donor dengan lokasi dan tanggal
+    $donor->update([
+        'lokasi_id' => $request->lokasi_id,
+        'alamat' => $request->alamat,
+        'donation_date' => $request->donation_date
+    ]);
+
+    session(['donor_id' => $donor->id]);
+
+    return redirect()->route('donor.questions', 1)
+        ->with('success', 'Lokasi dan tanggal donor berhasil dipilih. Lanjutkan mengisi kuesioner kesehatan.');
+}
 
     /**
      * Step 3-5: Health Questions (3 steps)
@@ -330,7 +550,6 @@ class DonorController extends Controller
         // Update status untuk yang layak donor
         $donor->update([
             'status' => 'approved',
-            'donation_date' => Carbon::now(),
             'next_eligible_date' => Carbon::now()->addWeeks(2),
             'notes' => 'Donor disetujui berdasarkan hasil kuesioner kesehatan dan informed consent.'
         ]);
@@ -347,7 +566,7 @@ class DonorController extends Controller
      */
     public function success($donorId)
     {
-        $donor = Donor::with('user')->find($donorId);
+        $donor = Donor::with('user', 'lokasi')->find($donorId); // TAMBAHAN: load lokasi
 
         if (!$donor || $donor->user_id !== auth()->id()) {
             return redirect()->route('donor.index')
@@ -360,83 +579,87 @@ class DonorController extends Controller
     /**
      * Donor History
      */
-    public function history()
-    {
-        // PERBAIKAN: Jika admin, redirect ke dashboard admin
-        if (auth()->user()->role === 'admin') {
-            return redirect()->route('admin.donors.index');
-        }
+public function history()
+{
+    $user = auth()->user();
+    
+    $donors = Donor::where('user_id', $user->id)
+        ->with('lokasi')
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
 
-        $donors = Donor::where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+    return view('user.donor.history', compact('donors'));
+}
 
-        return view('user.donor.history', compact('donors'));
-    }
 
     /**
      * Get donor detail (AJAX)
      */
-public function detail(Donor $donor)
-{
-    // Pastikan user hanya bisa melihat donor milik sendiri
-    if ($donor->user_id !== auth()->id()) {
-        if (request()->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akses ditolak'
-            ], 403);
+    public function detail(Donor $donor)
+    {
+        // Pastikan user hanya bisa melihat donor milik sendiri
+        if ($donor->user_id !== auth()->id()) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses ditolak'
+                ], 403);
+            }
+            abort(403);
         }
-        abort(403);
-    }
 
-    // Jika request AJAX (untuk modal)
-    if (request()->wantsJson() || request()->ajax()) {
-        try {
-            $donor->load(['user']);
-            
-            return response()->json([
-                'success' => true,
-                'donor' => [
-                    'id' => $donor->id,
-                    'donor_code' => $donor->donor_code,
-                    'status' => $donor->status,
-                    'blood_type' => $donor->blood_type,
-                    'weight' => $donor->weight,
-                    'height' => $donor->height,
-                    'blood_pressure' => $donor->blood_pressure,
-                    'is_eligible' => $donor->is_eligible,
-                    'notes' => $donor->notes,
-                    'rejection_reason' => $donor->rejection_reason,
-                    'created_at' => $donor->created_at,
-                    'approved_at' => $donor->approved_at,
-                    'donation_date' => $donor->donation_date,
-                    'next_eligible_date' => $donor->next_eligible_date,
-                    'user' => [
-                        'name' => $donor->user->name,
-                        'email' => $donor->user->email,
-                        'phone' => $donor->user->phone ?? '-'
+        // Jika request AJAX (untuk modal)
+        if (request()->wantsJson() || request()->ajax()) {
+            try {
+                $donor->load(['user', 'lokasi']); // TAMBAHAN: load lokasi
+                
+                return response()->json([
+                    'success' => true,
+                    'donor' => [
+                        'id' => $donor->id,
+                        'donor_code' => $donor->donor_code,
+                        'status' => $donor->status,
+                        'blood_type' => $donor->blood_type,
+                        'weight' => $donor->weight,
+                        'height' => $donor->height,
+                        'blood_pressure' => $donor->blood_pressure,
+                        'is_eligible' => $donor->is_eligible,
+                        'notes' => $donor->notes,
+                        'rejection_reason' => $donor->rejection_reason,
+                        'alamat' => $donor->alamat, // TAMBAHAN
+                        'created_at' => $donor->created_at,
+                        'approved_at' => $donor->approved_at,
+                        'donation_date' => $donor->donation_date,
+                        'next_eligible_date' => $donor->next_eligible_date,
+                        'user' => [
+                            'name' => $donor->user->name,
+                            'email' => $donor->user->email,
+                            'phone' => $donor->user->phone ?? '-'
+                        ],
+                        'lokasi' => $donor->lokasi ? [ // TAMBAHAN
+                            'nama' => $donor->lokasi->nama,
+                            'alamat' => $donor->lokasi->alamat_lengkap
+                        ] : null
                     ]
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan sistem'
-            ], 500);
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan sistem'
+                ], 500);
+            }
         }
-    }
 
-    // Jika bukan AJAX, return view biasa
-    return view('donor.detail', compact('donor'));
-}
+        // Jika bukan AJAX, return view biasa
+        return view('donor.detail', compact('donor'));
+    }
 
     /**
      * Generate certificate
      */
     public function certificate($donorId)
     {
-        $donor = Donor::with('user')->find($donorId);
+        $donor = Donor::with('user', 'lokasi')->find($donorId); // TAMBAHAN: load lokasi
 
         if (!$donor || $donor->user_id !== auth()->id()) {
             return redirect()->route('donor.history')
@@ -452,31 +675,45 @@ public function detail(Donor $donor)
         return view('user.donor.certificate', compact('donor'));
     }
 
-    /**
-     * Cancel donor process
-     */
-  
+/**
+ * Cancel donor process
+ */
+public function cancel()
+{
+    $user = auth()->user();
     
-     public function cancel()
-    {
-        $donorId = session('donor_id');
-        if ($donorId) {
-            $donor = Donor::find($donorId);
-            if ($donor && $donor->user_id === auth()->id() && $donor->status === 'pending') {
-                $donor->update([
-                    'status' => 'cancelled',
-                    'notes' => 'Proses donor dibatalkan oleh pengguna'
-                ]);
-            }
-            session()->forget('donor_id');
-        }
-
-        return redirect()->route('donor.index')
-            ->with('info', 'Proses donor telah dibatalkan.');
+    if ($user->role === 'admin') {
+        return redirect()->route('admin.donors.index');
     }
 
+    // Find pending donor
+    $donor = Donor::where('user_id', $user->id)
+        ->where('status', 'pending')
+        ->latest()
+        ->first();
+
+    if (!$donor) {
+        return redirect()->route('donor.index')
+            ->with('error', 'Tidak ada proses donor yang sedang berlangsung.');
+    }
+
+    // PERBAIKAN: Update status ke rejected tanpa eligibility_reason
+    $donor->update([
+        'status' => 'rejected',
+        'notes' => 'Proses donor dibatalkan oleh pengguna.'
+    ]);
+
+    // Clear session
+    session()->forget('donor_id');
+
+    return redirect()->route('donor.index')
+        ->with('success', 'Proses donor berhasil dibatalkan.');
+}
+
+
+
     // ==========================================
-    // ADMIN METHODS
+    // ADMIN METHODS (tidak diubah)
     // ==========================================
 
     /**
@@ -490,7 +727,7 @@ public function detail(Donor $donor)
         }
 
         try {
-            $donors = Donor::with('user')
+            $donors = Donor::with('user', 'lokasi') // TAMBAHAN: load lokasi
                            ->orderBy('created_at', 'desc')
                            ->paginate(20);
             
@@ -524,7 +761,7 @@ public function detail(Donor $donor)
         }
 
         try {
-            $donor = Donor::with('user')->findOrFail($donorId);
+            $donor = Donor::with('user', 'lokasi')->findOrFail($donorId); // TAMBAHAN: load lokasi
             
             return response()->json([
                 'success' => true,
@@ -542,56 +779,56 @@ public function detail(Donor $donor)
     /**
      * Admin - Update donor status
      */
-public function adminUpdateStatus(Request $request, $donorId)
-{
-    if (auth()->user()->role !== 'admin') {
-        return response()->json(['success' => false, 'error' => 'Akses ditolak'], 403);
-    }
+    public function adminUpdateStatus(Request $request, $donorId)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'error' => 'Akses ditolak'], 403);
+        }
 
-    $request->validate([
-        'status' => 'required|in:pending,approved,rejected,cancelled,completed', // Tambahkan completed
-        'rejection_reason' => 'required_if:status,rejected|string|max:500',
-        'donation_date' => 'nullable|date', // Tambahkan validasi untuk donation_date
-        'notes' => 'nullable|string|max:1000' // Tambahkan validasi untuk notes
-    ]);
-    
-    try {
-        $donor = Donor::findOrFail($donorId);
-        
-        $donor->status = $request->status;
-        
-        if ($request->status === 'rejected') {
-            $donor->rejection_reason = $request->rejection_reason;
-        }
-        
-        // Handle completed status
-        if ($request->status === 'completed') {
-            $donor->donation_date = $request->donation_date ?? now();
-            $donor->completed_at = now();
-            if ($request->notes) {
-                $donor->notes = $request->notes;
-            }
-        }
-        
-        // Handle approved status
-        if ($request->status === 'approved') {
-            $donor->approved_at = now();
-        }
-        
-        $donor->save();
-        
-        return response()->json([
-            'success' => true, 
-            'message' => 'Status berhasil diupdate'
+        $request->validate([
+            'status' => 'required|in:pending,approved,rejected,cancelled,completed', // Tambahkan completed
+            'rejection_reason' => 'required_if:status,rejected|string|max:500',
+            'donation_date' => 'nullable|date', // Tambahkan validasi untuk donation_date
+            'notes' => 'nullable|string|max:1000' // Tambahkan validasi untuk notes
         ]);
         
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => 'Gagal mengupdate status: ' . $e->getMessage()
-        ], 500);
+        try {
+            $donor = Donor::findOrFail($donorId);
+            
+            $donor->status = $request->status;
+            
+            if ($request->status === 'rejected') {
+                $donor->rejection_reason = $request->rejection_reason;
+            }
+            
+            // Handle completed status
+            if ($request->status === 'completed') {
+                $donor->donation_date = $request->donation_date ?? now();
+                $donor->completed_at = now();
+                if ($request->notes) {
+                    $donor->notes = $request->notes;
+                }
+            }
+            
+            // Handle approved status
+            if ($request->status === 'approved') {
+                $donor->approved_at = now();
+            }
+            
+            $donor->save();
+            
+            return response()->json([
+                'success' => true, 
+                'message' => 'Status berhasil diupdate'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Gagal mengupdate status: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
 
     /**
      * Admin - Mark donor as completed
@@ -651,7 +888,7 @@ public function adminUpdateStatus(Request $request, $donorId)
         }
 
         try {
-            $donors = Donor::with('user')->get();
+            $donors = Donor::with('user', 'lokasi')->get(); // TAMBAHAN: load lokasi
             
             // Check if there are donors
             if ($donors->isEmpty()) {
@@ -672,13 +909,15 @@ public function adminUpdateStatus(Request $request, $donorId)
             // Add BOM for UTF-8
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
             
-            // Header CSV
+            // Header CSV - TAMBAHAN: kolom lokasi dan alamat
             fputcsv($file, [
                 'Kode Donor',
                 'Nama',
                 'Email',
                 'Status',
                 'Layak',
+                'Lokasi Donor',
+                'Alamat Donor',
                 'Tanggal Daftar',
                 'Tanggal Donor',
                 'Donor Berikutnya',
@@ -694,6 +933,8 @@ public function adminUpdateStatus(Request $request, $donorId)
                     $donor->user->email ?? '',
                     $donor->status ?? '',
                     $donor->is_eligible ? 'Ya' : 'Tidak',
+                    $donor->lokasi->nama ?? '', // TAMBAHAN
+                    $donor->alamat ?? '', // TAMBAHAN
                     $donor->created_at ? $donor->created_at->format('d/m/Y H:i') : '',
                     $donor->donation_date ? $donor->donation_date->format('d/m/Y') : '',
                     $donor->next_eligible_date ? $donor->next_eligible_date->format('d/m/Y') : '',
@@ -714,7 +955,7 @@ public function adminUpdateStatus(Request $request, $donorId)
     }
 
     // ==========================================
-    // HELPER METHODS
+    // HELPER METHODS (tidak diubah)
     // ==========================================
 
     /**
@@ -775,6 +1016,7 @@ public function adminUpdateStatus(Request $request, $donorId)
             $rejectionReasons = array_merge($rejectionReasons, $additionalChecks['reasons']);
         }
 
+        // PERBAIKAN: Jika hanya ada 1 jawaban dan itu adalah "ya" untuk kesehatan, paksa eligible
         // PERBAIKAN: Jika hanya ada 1 jawaban dan itu adalah "ya" untuk kesehatan, paksa eligible
         if (count($answers) == 1) {
             $firstAnswer = reset($answers);
@@ -950,3 +1192,4 @@ public function adminUpdateStatus(Request $request, $donorId)
         ];
     }
 }
+      

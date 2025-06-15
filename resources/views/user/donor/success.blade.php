@@ -25,7 +25,7 @@
                 <p class="text-gray-600">Kode Donor: <span class="font-bold text-red-700">{{ $donor->donor_code }}</span></p>
             @endif
         </div>
-
+        
         <!-- Progress Bar Completed -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div class="flex items-center justify-between mb-4">
@@ -36,25 +36,19 @@
             <div class="flex items-center space-x-4">
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
-                    <span class="ml-2 text-sm text-gray-600">Kuesioner 1</span>
+                    <span class="ml-2 text-sm text-gray-600">Lokasi</span>
                 </div>
                 <div class="flex-1 h-1 bg-green-500"></div>
                 
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
-                    <span class="ml-2 text-sm text-gray-600">Kuesioner 2</span>
-                </div>
-                <div class="flex-1 h-1 bg-green-500"></div>
-                
-                <div class="flex items-center">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
-                    <span class="ml-2 text-sm text-gray-600">Kuesioner 3</span>
+                    <span class="ml-2 text-sm text-gray-600">Kuesioner</span>
                 </div>
                 
                 @if($donor->is_eligible)
                     <div class="flex-1 h-1 bg-green-500"></div>
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">4</div>
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
                         <span class="ml-2 text-sm text-gray-600">Persetujuan</span>
                     </div>
                 @endif
@@ -87,6 +81,26 @@
                             <span class="text-gray-600">Kode Donor:</span>
                             <span class="font-bold text-green-700">{{ $donor->donor_code }}</span>
                         </div>
+                        
+                        {{-- Info Lokasi --}}
+                        @if($donor->lokasi)
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Lokasi Donor:</span>
+                            <span class="font-medium">{{ $donor->lokasi->nama }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Kota:</span>
+                            <span class="font-medium">{{ $donor->lokasi->kota }}</span>
+                        </div>
+                        @endif
+                        @if($donor->alamat)
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Alamat Donor:</span>
+                            <span class="font-medium">{{ Str::limit($donor->alamat, 30) }}</span>
+                        </div>
+                        @endif
+                        {{-- End Info Lokasi --}}
+                        
                         <div class="flex justify-between">
                             <span class="text-gray-600">Status:</span>
                             <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
@@ -239,54 +253,30 @@
             </div>
         @endif
 
-{{-- Update bagian Action Buttons di success.blade.php --}}
-
-<!-- Action Buttons -->
-<div class="flex flex-col sm:flex-row gap-4 justify-center">
-    {{-- PERBAIKAN: Print button hanya untuk yang completed --}}
-    @if($donor->status === 'completed')
-        <button onclick="printCertificate()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-            <i class="fas fa-print mr-2"></i>
-            Cetak Sertifikat
-        </button>
-    @elseif($donor->status === 'approved')
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-            <i class="fas fa-info-circle text-blue-500 text-xl mb-2"></i>
-            <p class="text-blue-800 font-medium">Sertifikat akan tersedia setelah proses donor selesai di PMI</p>
-        </div>
-    @endif
-    
-    <a href="{{ route('donor.history') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center">
-        <i class="fas fa-history mr-2"></i>
-        Lihat Riwayat Donor
-    </a>
-    
-    <a href="{{ route('donor.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center">
-        <i class="fas fa-home mr-2"></i>
-        Kembali ke Beranda
-    </a>
-</div>
-
-
-        <!-- Contact Info -->
-        <div class="mt-8 text-center">
-            <div class="bg-gray-50 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">Butuh Bantuan?</h3>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center text-sm">
-                    <div class="flex items-center justify-center">
-                        <i class="fas fa-phone text-gray-500 mr-2"></i>
-                        <span class="text-gray-700">Telepon: (022) 123-4567</span>
-                    </div>
-                    <div class="flex items-center justify-center">
-                        <i class="fas fa-envelope text-gray-500 mr-2"></i>
-                        <span class="text-gray-700">Email: info@pmibandung.org</span>
-                    </div>
-                    <div class="flex items-center justify-center">
-                        <i class="fas fa-clock text-gray-500 mr-2"></i>
-                        <span class="text-gray-700">Senin-Jumat: 08:00-16:00</span>
-                    </div>
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            {{-- Print button hanya untuk yang completed --}}
+            @if($donor->status === 'completed')
+                <button onclick="printCertificate()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-print mr-2"></i>
+                    Cetak Sertifikat
+                </button>
+            @elseif($donor->status === 'approved')
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                    <i class="fas fa-info-circle text-blue-500 text-xl mb-2"></i>
+                    <p class="text-blue-800 font-medium">Sertifikat akan tersedia setelah proses donor selesai di PMI</p>
                 </div>
-            </div>
+            @endif
+            
+            <a href="{{ route('donor.history') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center">
+                <i class="fas fa-history mr-2"></i>
+                Lihat Riwayat Donor
+            </a>
+            
+            <a href="{{ route('donor.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center">
+                <i class="fas fa-home mr-2"></i>
+                Kembali ke Beranda
+            </a>
         </div>
     </div>
 </div>

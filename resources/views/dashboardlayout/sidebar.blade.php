@@ -24,28 +24,28 @@
 
                 <li>
                     <a href="{{ route('donor.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('analytics') ? 'bg-red-700' : '' }}">
-                        <i class="fas fa-chart-bar mr-3"></i>
+                        <i class="fas fa-tint mr-3"></i>
                         Data Donor
                     </a>
                 </li>
 
                 <li>
                     <a href="/lokasis" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('reports.*') ? 'bg-red-700' : '' }}">
-                        <i class="fas fa-file-alt mr-3"></i>
+                        <i class="fas fa-map-marker-alt mr-3"></i>
                         Lokasi
                     </a>
                 </li>
 
                 <li>
                     <a href="{{ route('admin.articles.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('admin.logs') ? 'bg-red-700' : '' }}">
-                        <i class="fas fa-clipboard-list mr-3"></i>
+                        <i class="fas fa-newspaper mr-3"></i>
                         Artikel
                     </a>
                 </li>
 
                  <li>
                     <a href="/admin/events" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('admin.logs') ? 'bg-red-700' : '' }}">
-                        <i class="fas fa-clipboard-list mr-3"></i>
+                        <i class="fas fa-calendar-alt mr-3"></i>
                         Event
                     </a>
                 </li>
@@ -64,14 +64,14 @@
 
                  <li>
                     <a href="/profile" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
-                        <i class="fas fa-shopping-bag mr-3"></i>
+                        <i class="fas fa-user mr-3"></i>
                         Profile
                     </a>
                 </li>
 
                 <li>
                     <a href="/donor" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
-                        <i class="fas fa-shopping-bag mr-3"></i>
+                        <i class="fas fa-hand-holding-heart mr-3"></i>
                         Donor
                     </a>
                 </li>

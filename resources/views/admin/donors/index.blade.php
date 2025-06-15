@@ -1,4 +1,3 @@
-{{-- resources/views/admin/donors/index.blade.php --}}
 @extends('dashboardlayout.app')
 
 @section('page-title', 'Manajemen Donor')
@@ -7,27 +6,33 @@
 <div class="container mx-auto px-4 py-6">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Manajemen Donor Darah</h1>
-                <p class="text-gray-600">Kelola semua data donor darah</p>
-            </div>
-            <div class="mt-4 md:mt-0 flex gap-2">
-                <a href="{{ route('admin.donors.export') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center">
-                    <i class="fas fa-download mr-2"></i>
-                    Export Excel
-                </a>
-                <button onclick="refreshData()" 
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                    <i class="fas fa-sync-alt mr-2"></i>
-                    Refresh
-                </button>
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div class="text-center md:text-left">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto md:mx-0 mb-4">
+                        <i class="fas fa-users-cog text-red-600 text-2xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800 mb-2">Manajemen Donor Darah</h1>
+                    <p class="text-gray-600">Kelola semua data donor darah dan proses persetujuan</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex gap-2">
+                    <a href="{{ route('admin.donors.export') }}" 
+                       class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center">
+                        <i class="fas fa-download mr-2"></i>
+                        Export Excel
+                    </a>
+                    <button onclick="refreshData()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Refresh
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-users text-blue-600 text-xl"></i>
@@ -39,7 +44,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-clock text-yellow-600 text-xl"></i>
@@ -51,7 +56,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-thumbs-up text-blue-600 text-xl"></i>
@@ -63,7 +68,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-check-circle text-green-600 text-xl"></i>
@@ -75,7 +80,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-times-circle text-red-600 text-xl"></i>
@@ -90,52 +95,78 @@
 
         <!-- Filter & Search -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cari Donor</label>
-                    <div class="relative">
-                        <input type="text" 
-                               id="searchInput"
-                               placeholder="Kode donor atau nama..."
-                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            <div class="flex items-start space-x-4 mb-4">
+                <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 mt-1">
+                    <i class="fas fa-filter text-xs"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-gray-800 font-medium mb-3">
+                        <i class="fas fa-search text-red-600 mr-2"></i>
+                        Filter & Pencarian Data
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cari Donor</label>
+                            <div class="relative">
+                                <input type="text" 
+                                       id="searchInput"
+                                       placeholder="Kode donor atau nama..."
+                                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="statusFilter" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                <option value="">Semua Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Disetujui</option>
+                                <option value="completed">Selesai</option>
+                                <option value="rejected">Ditolak</option>
+                                <option value="cancelled">Dibatalkan</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Kelayakan</label>
+                            <select id="eligibilityFilter" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                                <option value="">Semua</option>
+                                <option value="1">Layak</option>
+                                <option value="0">Tidak Layak</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+                            <input type="date" 
+                                   id="dateFilter"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        </div>
                     </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select id="statusFilter" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Semua Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Disetujui</option>
-                        <option value="completed">Selesai</option>
-                        <option value="rejected">Ditolak</option>
-                        <option value="cancelled">Dibatalkan</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kelayakan</label>
-                    <select id="eligibilityFilter" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Semua</option>
-                        <option value="1">Layak</option>
-                        <option value="0">Tidak Layak</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
-                    <input type="date" 
-                           id="dateFilter"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
         </div>
 
         <!-- Donors Table -->
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                        <i class="fas fa-table text-xs"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-gray-800 font-medium">
+                            <i class="fas fa-list text-red-600 mr-2"></i>
+                            Daftar Donor Darah
+                        </h3>
+                        <p class="text-sm text-gray-600">Total: {{ $totalDonors }} donor terdaftar</p>
+                    </div>
+                </div>
+            </div>
+            
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -169,8 +200,8 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
-                                            <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                                <i class="fas fa-user text-gray-600"></i>
+                                            <div class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                                                <i class="fas fa-user text-red-600"></i>
                                             </div>
                                         </div>
                                         <div class="ml-4">
@@ -224,13 +255,14 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
                                         <button onclick="viewDonor({{ $donor->id }})" 
-                                                class="text-blue-600 hover:text-blue-900">
+                                                class="text-blue-600 hover:text-blue-900 p-1 rounded"
+                                                title="Lihat Detail">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         
                                         @if($donor->status === 'approved')
                                             <button onclick="completeDonor({{ $donor->id }})" 
-                                                    class="text-green-600 hover:text-green-900" 
+                                                    class="text-green-600 hover:text-green-900 p-1 rounded" 
                                                     title="Tandai Selesai">
                                                 <i class="fas fa-check-circle"></i>
                                             </button>
@@ -238,12 +270,12 @@
                                         
                                         @if($donor->status === 'pending')
                                             <button onclick="approveDonor({{ $donor->id }})" 
-                                                    class="text-blue-600 hover:text-blue-900" 
+                                                    class="text-blue-600 hover:text-blue-900 p-1 rounded" 
                                                     title="Setujui">
                                                 <i class="fas fa-thumbs-up"></i>
                                             </button>
                                             <button onclick="rejectDonor({{ $donor->id }})" 
-                                                    class="text-red-600 hover:text-red-900" 
+                                                    class="text-red-600 hover:text-red-900 p-1 rounded" 
                                                     title="Tolak">
                                                 <i class="fas fa-times-circle"></i>
                                             </button>
@@ -252,7 +284,7 @@
                                         @if($donor->status === 'completed')
                                             <a href="{{ route('donor.certificate', $donor->id) }}" 
                                                target="_blank"
-                                               class="text-green-600 hover:text-green-900" 
+                                               class="text-green-600 hover:text-green-900 p-1 rounded" 
                                                title="Lihat Sertifikat">
                                                 <i class="fas fa-certificate"></i>
                                             </a>
@@ -263,8 +295,11 @@
                         @empty
                             <tr>
                                 <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                    <i class="fas fa-inbox text-4xl mb-4"></i>
-                                    <p>Belum ada data donor</p>
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <i class="fas fa-inbox text-gray-400 text-2xl"></i>
+                                    </div>
+                                    <p class="text-lg font-medium">Belum ada data donor</p>
+                                    <p class="text-sm">Data donor akan muncul di sini setelah ada pendaftaran</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -278,6 +313,31 @@
                     {{ $donors->links() }}
                 </div>
             @endif
+        </div>
+
+        <!-- Help Section -->
+        <div class="bg-blue-50 rounded-lg p-6 mt-6">
+            <h3 class="text-lg font-semibold text-blue-800 mb-3">💡 Panduan Admin</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                <div>
+                    <h4 class="font-semibold mb-2">Status Donor:</h4>
+                    <ul class="space-y-1">
+                        <li>• <strong>Pending:</strong> Menunggu persetujuan admin</li>
+                        <li>• <strong>Disetujui:</strong> Siap untuk donor darah</li>
+                        <li>• <strong>Selesai:</strong> Proses donor telah selesai</li>
+                        <li>• <strong>Ditolak:</strong> Tidak memenuhi syarat</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2">Aksi yang Tersedia:</h4>
+                    <ul class="space-y-1">
+                        <li>• <i class="fas fa-eye text-blue-600"></i> Lihat detail lengkap donor</li>
+                        <li>• <i class="fas fa-thumbs-up text-blue-600"></i> Setujui donor yang pending</li>
+                        <li>• <i class="fas fa-check-circle text-green-600"></i> Tandai selesai donor yang disetujui</li>
+                        <li>• <i class="fas fa-certificate text-green-600"></i> Lihat sertifikat donor selesai</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -481,6 +541,10 @@ function viewDonor(donorId) {
                         <div class="bg-red-50 rounded-lg p-4">
                             <h4 class="font-semibold text-red-800 mb-2">Alasan Penolakan</h4>
                             <p class="text-sm text-red-700">${data.donor.rejection_reason}</p>
+                    ${data.donor.rejection_reason ? `
+                        <div class="bg-red-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-red-800 mb-2">Alasan Penolakan</h4>
+                            <p class="text-sm text-red-700">${data.donor.rejection_reason}</p>
                         </div>
                     ` : ''}
                 </div>
@@ -493,7 +557,6 @@ function viewDonor(donorId) {
             document.getElementById('viewContent').innerHTML = `<div class="text-center py-8 text-red-600">Gagal memuat detail: ${error.message}</div>`;
         });
 }
-
 
 // Approve donor
 function approveDonor(donorId) {
@@ -572,7 +635,6 @@ document.getElementById('completeForm').addEventListener('submit', function(e) {
         submitBtn.textContent = 'Tandai Selesai';
     });
 });
-
 
 // Handle reject form
 document.getElementById('rejectForm').addEventListener('submit', function(e) {

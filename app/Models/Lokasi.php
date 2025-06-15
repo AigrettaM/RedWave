@@ -74,7 +74,7 @@ class Lokasi extends Model
         return $query->where('jenis', $jenis);
     }
 
-    // Relasi jika ada tabel donor
+    // Relasi ke Donor
     public function donors()
     {
         return $this->hasMany(Donor::class);

@@ -23,10 +23,20 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
+// Public Article routes (bisa diakses semua orang)
 Route::get('/article', [ArticleController::class, 'index'])->name('article.index');
 Route::get('/article/{slug}', [ArticleController::class, 'show'])->name('article.show');
 
+// Public Contact route
+Route::get('/contact', function() {
+    return view('informasi.contact');
+})->name('contact');
+
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
 
 // Guest routes (belum login)
 Route::group(['middleware' => 'guest'], function () {
@@ -38,18 +48,24 @@ Route::group(['middleware' => 'guest'], function () {
 
 // Authenticated routes (sudah login)
 Route::group(['middleware'=> 'auth'], function () {
-    Route::get('/home', [HomeController::class, 'index']);
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::delete('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-// Profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/form', [ProfileController::class, 'form'])->name('profile.form');
     Route::post('/profile/save', [ProfileController::class, 'save'])->name('profile.save');
 });
 
-// Dependent dropdown routes
+// Admin - Manajemen Semua Data User (Profile)
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/data-user', [ProfileController::class, 'index'])->name('profiles.index');
+    Route::delete('/data-user/{id}', [ProfileController::class, 'destroy'])->name('profiles.destroy');
+});
+
+
+
 Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
 Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
 Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
@@ -60,6 +76,11 @@ Route::middleware('auth')->prefix('donor')->name('donor.')->group(function () {
     // Main donor flow
     Route::get('/', [DonorController::class, 'index'])->name('index');
     Route::post('/start', [DonorController::class, 'start'])->name('start');
+    Route::post('/cancel', [DonorController::class, 'cancel'])->name('cancel');
+    
+    // Location
+    Route::get('/location/{donor}', [DonorController::class, 'location'])->name('location');
+    Route::post('/location/{donor}', [DonorController::class, 'saveLocation'])->name('location.save');
     
     // Health questions (3 steps)
     Route::get('/questions/{step}', [DonorController::class, 'questions'])->name('questions')->where('step', '[1-3]');
@@ -72,64 +93,14 @@ Route::middleware('auth')->prefix('donor')->name('donor.')->group(function () {
     // Success page (for all results)
     Route::get('/success/{donor}', [DonorController::class, 'success'])->name('success');
     
-    // Cancel process
-    Route::get('/cancel', [DonorController::class, 'cancel'])->name('cancel');
-    
     // Donor history and details
     Route::get('/history', [DonorController::class, 'history'])->name('history');
     Route::get('/detail/{donor}', [DonorController::class, 'detail'])->name('detail');
     Route::get('/certificate/{donor}', [DonorController::class, 'certificate'])->name('certificate');
 });
 
-// Admin Donor Routes (optional)
-Route::middleware(['auth', 'admin'])->prefix('admin/donors')->name('admin.donors.')->group(function () {
-    Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
-    Route::get('/{donor}', [DonorController::class, 'adminShow'])->name('show');
-    Route::put('/{donor}/status', [DonorController::class, 'adminUpdateStatus'])->name('status');
-});
 
-// Admin routes
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // Donor Management
-    Route::prefix('donors')->name('donors.')->group(function () {
-        Route::get('/export/data', [DonorController::class, 'adminExport'])->name('export');
-        Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
-        Route::get('/{donor}', [DonorController::class, 'adminShow'])->name('show');
-        Route::put('/admin/donors/{donor}/status', [AdminDonorController::class, 'adminUpdateStatus'])->name('admin.donors.updateStatus');
-        Route::post('/{donor}/complete', [DonorController::class, 'adminComplete'])->name('complete');
-    });
-});
 
-// Admin - Manajemen Semua Data User (Profile)
-Route::get('/data-user', [ProfileController::class, 'index'])->name('profiles.index');
-Route::delete('/data-user/{id}', [ProfileController::class, 'destroy'])->name('profiles.destroy');
-
-// Public routes (bisa diakses semua orang)
-Route::get('/contact', function() {
-    return view('informasi.contact');
-})->name('contact');
-
-// BotMan routes
-Route::get('/botman/iframe', function() {
-    return view('botman.iframe');
-});
-
-Route::post('/botman', function() {
-    $botman = app('botman');
-    
-    // Di sini Anda bisa menambah/edit respons chatbot
-    $botman->hears('kata_kunci', function ($botman) {
-        $botman->reply('Respons Anda');
-    });
-    
-    $botman->listen();
-});
-
-// Route botman
-Route::post('/botman', [BotManController::class, 'handle']);
-
-// Frontend Routes - event
 Route::prefix('informasi')->group(function () {
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
@@ -137,36 +108,55 @@ Route::prefix('informasi')->group(function () {
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 });
 
-// Admin Routes (with auth middleware)
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+
+Route::get('/botman/iframe', function() {
+    return view('botman.iframe');
+});
+
+Route::post('/botman', [BotManController::class, 'handle']);
+
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Dashboard
+    Route::get('/dashboard', function() {
+        return view('admin.admin');
+    })->name('dashboard');
+    
+    // Donor Management
+    Route::prefix('donors')->name('donors.')->group(function () {
+        Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
+        Route::get('/export/data', [DonorController::class, 'adminExport'])->name('export');
+        Route::get('/{donor}', [DonorController::class, 'adminShow'])->name('show');
+        Route::put('/{donor}/status', [DonorController::class, 'adminUpdateStatus'])->name('status');
+        Route::post('/{donor}/complete', [DonorController::class, 'adminComplete'])->name('complete');
+    });
+    
+    // Events Management
     Route::resource('events', AdminEventController::class);
     Route::post('events/{event}/approve', [AdminEventController::class, 'approve'])->name('events.approve');
     Route::post('events/{event}/reject', [AdminEventController::class, 'reject'])->name('events.reject');
-});
-
-// Route untuk lokasi (admin)
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::resource('lokasis', LokasiController::class);
-});
-
-Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
-    Route::get('/lokasis', [LokasiController::class, 'index'])->name('lokasis.index');
-    Route::get('/lokasis/create', [LokasiController::class, 'create'])->name('lokasis.create');
-    Route::post('/lokasis', [LokasiController::class, 'store'])->name('lokasis.store');
-    Route::get('/lokasis/{lokasi}/edit', [LokasiController::class, 'edit'])->name('lokasis.edit');
-    Route::put('/lokasis/{lokasi}', [LokasiController::class, 'update'])->name('lokasis.update');
-    Route::delete('/lokasis/{lokasi}', [LokasiController::class, 'destroy'])->name('lokasis.destroy');
-});
-
-// Route untuk arikel (admin)
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/articles', [ArticleController::class, 'adminIndex'])->name('articles.index');
-    Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
-    Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
-    Route::get('/articles/{article}', [ArticleController::class, 'adminShow'])->name('articles.show');
-    Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
-    Route::put('/articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
-    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
-    Route::patch('/articles/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('articles.toggle-status');
-    Route::patch('/articles/{article}/toggle-featured', [ArticleController::class, 'toggleFeatured'])->name('articles.toggle-featured');
+    
+    // Lokasi Management
+    Route::prefix('lokasis')->name('lokasis.')->group(function () {
+        Route::get('/', [LokasiController::class, 'index'])->name('index');
+        Route::get('/create', [LokasiController::class, 'create'])->name('create');
+        Route::post('/', [LokasiController::class, 'store'])->name('store');
+        Route::get('/{lokasi}/edit', [LokasiController::class, 'edit'])->name('edit');
+        Route::put('/{lokasi}', [LokasiController::class, 'update'])->name('update');
+        Route::delete('/{lokasi}', [LokasiController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Articles Management
+    Route::prefix('articles')->name('articles.')->group(function () {
+        Route::get('/', [ArticleController::class, 'adminIndex'])->name('index');
+        Route::get('/create', [ArticleController::class, 'create'])->name('create');
+        Route::post('/', [ArticleController::class, 'store'])->name('store');
+        Route::get('/{article}', [ArticleController::class, 'adminShow'])->name('show');
+        Route::get('/{article}/edit', [ArticleController::class, 'edit'])->name('edit');
+        Route::put('/{article}', [ArticleController::class, 'update'])->name('update');
+        Route::delete('/{article}', [ArticleController::class, 'destroy'])->name('destroy');
+        Route::patch('/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('toggle-status');
+        Route::patch('/{article}/toggle-featured', [ArticleController::class, 'toggleFeatured'])->name('toggle-featured');
+    });
 });

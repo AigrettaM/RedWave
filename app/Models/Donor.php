@@ -1,5 +1,4 @@
 <?php
-// app/Models/Donor.php
 
 namespace App\Models;
 
@@ -21,8 +20,10 @@ class Donor extends Model
         'donation_date',
         'next_eligible_date',
         'notes',
-        'approved_at',        // Tambahkan ini jika belum ada
-        'completed_at'        // Tambahkan ini jika belum ada
+        'approved_at',
+        'completed_at',
+        'alamat',             // Tambahan baru
+        'lokasi_id'           // Tambahan baru
     ];
 
     protected $casts = [
@@ -30,16 +31,29 @@ class Donor extends Model
         'is_eligible' => 'boolean',
         'donation_date' => 'datetime',
         'next_eligible_date' => 'datetime',
-        'approved_at' => 'datetime',      // Tambahkan ini jika belum ada
-        'completed_at' => 'datetime'      // Tambahkan ini jika belum ada
+        'approved_at' => 'datetime',
+        'completed_at' => 'datetime'
     ];
 
+    /**
+     * Relasi ke User
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Check if user can donate again
+    /**
+     * Relasi ke Lokasi
+     */
+    public function lokasi()
+    {
+        return $this->belongsTo(Lokasi::class);
+    }
+
+    /**
+     * Check if user can donate again
+     */
     public static function canDonateAgain($userId)
     {
         $lastDonation = self::where('user_id', $userId)
@@ -55,7 +69,9 @@ class Donor extends Model
         return Carbon::now()->gte($nextEligibleDate);
     }
 
-    // Get next eligible date
+    /**
+     * Get next eligible date
+     */
     public static function getNextEligibleDate($userId)
     {
         $lastDonation = self::where('user_id', $userId)
@@ -70,7 +86,9 @@ class Donor extends Model
         return $lastDonation->donation_date->addWeeks(8);
     }
 
-    // Generate donor code
+    /**
+     * Generate donor code
+     */
     public static function generateDonorCode()
     {
         $date = Carbon::now()->format('Ymd');
