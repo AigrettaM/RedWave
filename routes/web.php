@@ -98,6 +98,10 @@ Route::prefix('informasi')->group(function () {
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 });
 
+// Routes untuk halaman publik lokasi
+Route::get('/lokasi-donor', [LokasiController::class, 'publicIndex'])->name('public.lokasi.index');
+Route::get('/lokasi-donor/{lokasi}', [LokasiController::class, 'publicShow'])->name('public.lokasi.show');
+
 // BOTMAN
 Route::get('/botman/iframe', function() {
     return view('botman.iframe');

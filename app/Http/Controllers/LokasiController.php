@@ -147,4 +147,48 @@ class LokasiController extends Controller
         
         return response()->json($lokasis);
     }
+    // Update method ini di LokasiController.php
+
+public function publicIndex(Request $request)
+{
+    $query = Lokasi::aktif(); // Hanya tampilkan yang aktif
+    
+    // Filter berdasarkan kota jika ada
+    if ($request->has('kota') && $request->kota != '') {
+        $query->byKota($request->kota);
+    }
+    
+    // Filter berdasarkan jenis jika ada
+    if ($request->has('jenis') && $request->jenis != '') {
+        $query->byJenis($request->jenis);
+    }
+    
+    // Pencarian
+    if ($request->has('search') && $request->search != '') {
+        $query->where(function($q) use ($request) {
+            $q->where('nama', 'like', '%' . $request->search . '%')
+              ->orWhere('alamat', 'like', '%' . $request->search . '%')
+              ->orWhere('kota', 'like', '%' . $request->search . '%');
+        });
+    }
+    
+    $lokasis = $query->orderBy('created_at', 'desc')->paginate(12);
+    
+    // Data untuk filter dropdown
+    $kotas = Lokasi::aktif()->distinct()->pluck('kota')->sort();
+    $jenisOptions = ['provinsi', 'kota', 'cabang'];
+    
+    return view('informasi.location.index', compact('lokasis', 'kotas', 'jenisOptions'));
+}
+
+public function publicShow(Lokasi $lokasi)
+{
+    // Hanya tampilkan jika aktif
+    if ($lokasi->status !== 'aktif') {
+        abort(404);
+    }
+    
+    return view('informasi.location.show', compact('lokasi'));
+}
+
 }
