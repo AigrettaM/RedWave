@@ -32,13 +32,9 @@ Route::get('/home', function() {
     return redirect()->route('welcome');
 })->name('home');
 
-
 // Public Article routes
 Route::get('/article', [ArticleController::class, 'index'])->name('article.index');
 Route::get('/article/{slug}', [ArticleController::class, 'show'])->name('article.show');
-//Public Location
-Route::get('/location', [LokasiController::class, 'publicIndex'])->name('location.index');
-Route::get('/location/{id}', [LokasiController::class, 'publicShow'])->name('location.show');
 
 // Public Information routes
 Route::get('/contact', function() {
@@ -131,15 +127,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/home', [HomeController::class, 'userHome'])->name('user.home');
     
     // ========================================
-    // PROFILE ROUTES
+    // USER PROFILE ROUTES - FIXED
     // ========================================
-    Route::prefix('profile')->name('profile.')->group(function () {
+    Route::prefix('user/profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'show'])->name('show');
         Route::get('/form', [ProfileController::class, 'form'])->name('form');
         Route::get('/edit', [ProfileController::class, 'form'])->name('edit');
         Route::post('/save', [ProfileController::class, 'save'])->name('save');
     });
-    
+
     // ========================================
     // USER DONOR ROUTES
     // ========================================
@@ -209,9 +205,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/bulk-export', [ProfileController::class, 'bulkExport'])->name('bulk-export');
     });
     
-    // ========================================
-    // DONOR MANAGEMENT
-    // ========================================
     Route::prefix('donors')->name('donors.')->group(function () {
         Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
         Route::get('/export', [DonorController::class, 'adminExport'])->name('export');
@@ -229,10 +222,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/bulk-approve', [DonorController::class, 'bulkApprove'])->name('bulk-approve');
         Route::post('/bulk-reject', [DonorController::class, 'bulkReject'])->name('bulk-reject');
     });
-    
-    // ========================================
-    // EVENTS MANAGEMENT
-    // ========================================
+
     Route::prefix('events')->name('events.')->group(function () {
         Route::get('/', [AdminEventController::class, 'index'])->name('index');
         Route::get('/create', [AdminEventController::class, 'create'])->name('create');
@@ -253,9 +243,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{event}/participants/export', [AdminEventController::class, 'exportParticipants'])->name('participants.export');
     });
     
-    // ========================================
-    // LOKASI MANAGEMENT
-    // ========================================
     Route::prefix('lokasis')->name('lokasis.')->group(function () {
         Route::get('/', [LokasiController::class, 'index'])->name('index');
         Route::get('/create', [LokasiController::class, 'create'])->name('create');
@@ -278,9 +265,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{lokasi}/toggle-status', [LokasiController::class, 'toggleStatus'])->name('toggle-status');
     });
     
-    // ========================================
-    // ARTICLES MANAGEMENT
-    // ========================================
     Route::prefix('articles')->name('articles.')->group(function () {
         Route::get('/', [ArticleController::class, 'adminIndex'])->name('index');
         Route::get('/create', [ArticleController::class, 'create'])->name('create');
@@ -302,9 +286,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/bulk-delete', [ArticleController::class, 'bulkDelete'])->name('bulk-delete');
     });
     
-    // ========================================
-    // SYSTEM MANAGEMENT
-    // ========================================
     Route::prefix('system')->name('system.')->group(function () {
         // Settings
         Route::get('/settings', function() {
@@ -335,10 +316,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             return redirect()->back()->with('success', 'Cache berhasil dibersihkan');
         })->name('cache.clear');
     });
-    
-    // ========================================
-    // REPORTS
-    // ========================================
+
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', function() {
             return view('admin.reports.index');
@@ -356,9 +334,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 });
 
-// ========================================
-// AJAX API ROUTES (for authenticated users)
-// ========================================
 Route::prefix('ajax')->name('ajax.')->middleware('auth')->group(function () {
     // Profile related
     Route::get('/profile/{id}', [ProfileController::class, 'getProfile'])->name('profile.get');
