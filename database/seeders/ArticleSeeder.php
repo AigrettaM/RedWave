@@ -24,7 +24,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Ahmad Rizki',
                 'author_title' => 'Senior Laravel Developer',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel0.jpg',
                 'tags' => ['laravel', 'php', 'web development', 'tutorial', 'framework'],
                 'status' => 'published',
                 'is_featured' => true,
@@ -40,7 +40,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Sarah Putri',
                 'author_title' => 'Frontend Developer',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel1.jpg',
                 'tags' => ['javascript', 'es6', 'frontend', 'programming'],
                 'status' => 'published',
                 'is_featured' => true,
@@ -56,7 +56,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Budi Santoso',
                 'author_title' => 'Digital Marketing Specialist',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel2.jpg',
                 'tags' => ['digital marketing', 'umkm', 'bisnis', 'social media'],
                 'status' => 'published',
                 'is_featured' => false,
@@ -72,7 +72,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Maya Sari',
                 'author_title' => 'UI/UX Designer',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel3.jpg',
                 'tags' => ['ui/ux', 'design', 'trends', '2024'],
                 'status' => 'published',
                 'is_featured' => true,
@@ -88,7 +88,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Andi Wijaya',
                 'author_title' => 'Cybersecurity Consultant',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel4.jpg',
                 'tags' => ['cybersecurity', 'bisnis', 'keamanan', 'technology'],
                 'status' => 'published',
                 'is_featured' => false,
@@ -104,7 +104,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Dina Rahayu',
                 'author_title' => 'Career Coach',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel5.jpg',
                 'tags' => ['linkedin', 'personal branding', 'career', 'networking'],
                 'status' => 'published',
                 'is_featured' => false,
@@ -120,7 +120,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Rizky Pratama',
                 'author_title' => 'Frontend Architect',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel6.jpg',
                 'tags' => ['react', 'vue.js', 'frontend', 'comparison'],
                 'status' => 'draft',
                 'is_featured' => false,
@@ -136,7 +136,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Sinta Dewi',
                 'author_title' => 'SEO Specialist',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel7.jpg',
                 'tags' => ['seo', 'e-commerce', 'digital marketing', 'optimization'],
                 'status' => 'published',
                 'is_featured' => false,
@@ -152,7 +152,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Dr. Fajar Nugroho',
                 'author_title' => 'Data Scientist',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel8.jpg',
                 'tags' => ['machine learning', 'ai', 'data science', 'python'],
                 'status' => 'draft',
                 'is_featured' => false,
@@ -168,7 +168,7 @@ class ArticleSeeder extends Seeder
                 'author' => 'Indra Kusuma',
                 'author_title' => 'Senior Freelancer',
                 'author_avatar' => null,
-                'featured_image' => null,
+                'featured_image' => 'articles/artikel9.jpg',
                 'tags' => ['freelancing', 'career', 'tips', 'remote work'],
                 'status' => 'published',
                 'is_featured' => true,
@@ -178,7 +178,12 @@ class ArticleSeeder extends Seeder
         ];
 
         foreach ($articles as $articleData) {
-            Article::create($articleData);
-        }
+          Article::updateOrCreate(
+              ['slug' => $articleData['slug']], // Cari berdasarkan slug
+              $articleData // Update atau create dengan data ini
+          );
+      }
+      
+      $this->command->info('✅ Artikel berhasil di-update/create!');
     }
 }

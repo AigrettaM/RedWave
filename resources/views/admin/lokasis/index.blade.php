@@ -246,15 +246,32 @@
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-12 w-12">
                                             @if($lokasi->gambar)
-                                                <img src="{{ asset($lokasi->gambar) }}" 
-                                                     alt="{{ $lokasi->nama }}" 
-                                                     class="h-12 w-12 object-cover rounded-lg border border-gray-200">
+                                                @if(str_starts_with($lokasi->gambar, 'lokasi-images/'))
+                                                    {{-- Gambar baru --}}
+                                                    <img src="{{ asset('storage/' . $lokasi->gambar) }}" 
+                                                        alt="{{ $lokasi->nama }}" 
+                                                        class="h-12 w-12 object-cover rounded-lg border border-gray-200"
+                                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                @else
+                                                    {{-- Gambar lama --}}
+                                                    <img src="{{ asset($lokasi->gambar) }}" 
+                                                        alt="{{ $lokasi->nama }}" 
+                                                        class="h-12 w-12 object-cover rounded-lg border border-gray-200"
+                                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                @endif
+                                                
+                                                {{-- Fallback jika gambar tidak bisa dimuat --}}
+                                                <div class="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center" style="display: none;">
+                                                    <i class="fas fa-hospital text-red-600"></i>
+                                                </div>
                                             @else
+                                                {{-- Default icon jika tidak ada gambar --}}
                                                 <div class="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
                                                     <i class="fas fa-hospital text-red-600"></i>
                                                 </div>
                                             @endif
                                         </div>
+
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900 lokasi-nama">
                                                 {{ $lokasi->nama }}

@@ -48,21 +48,30 @@
                         @forelse($articles as $article)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <!-- Article Info with Image -->
-                            <td class="px-6 py-4">
+                                <td class="px-6 py-4">
                                 <div class="flex items-start space-x-4">
                                     <!-- Featured Image -->
                                     <div class="flex-shrink-0">
                                         @if($article->featured_image)
-                                            <img src="{{ asset('storage/' . $article->featured_image) }}" 
-                                                 alt="{{ $article->title }}"
-                                                 class="w-16 h-16 rounded-lg object-cover border border-gray-200 shadow-sm"
-                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            @php
+                                                // Kondisi sederhana untuk path gambar
+                                                if (str_starts_with($article->featured_image, 'articles/')) {
+                                                    $imageUrl = asset('storage/' . $article->featured_image);
+                                                } else {
+                                                    $imageUrl = asset($article->featured_image);
+                                                }
+                                            @endphp
+                                            <img src="{{ $imageUrl }}" 
+                                                alt="{{ $article->title }}"
+                                                class="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                             <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200" style="display: none;">
-                                                <i class="fas fa-image text-gray-400 text-xl"></i>
+                                                <i class="fas fa-image text-gray-400"></i>
                                             </div>
                                         @else
-                                            <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-                                                <i class="fas fa-image text-gray-400 text-xl"></i>
+                                            <!-- Placeholder untuk artikel tanpa gambar -->
+                                            <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                                <i class="fas fa-newspaper text-blue-500 text-xl"></i>
                                             </div>
                                         @endif
                                     </div>

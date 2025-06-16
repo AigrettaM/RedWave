@@ -113,6 +113,19 @@ class LokasiController extends Controller
                 ]);
             }
 
+            // Pengkondisian gambar
+          if ($lokasi->gambar) {
+              if (str_starts_with($lokasi->gambar, 'lokasi-images/')) {
+                  // Data baru
+                  $data['gambar'] = asset('storage/' . $lokasi->gambar);
+              } else {
+                  // Data lama
+                  $data['gambar'] = asset($lokasi->gambar);
+              }
+          } else {
+              $data['gambar'] = null;
+          }
+            
             // Return view for normal request
             return view('admin.lokasis.show', compact('lokasi'));
             

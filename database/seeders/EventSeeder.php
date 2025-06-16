@@ -300,111 +300,201 @@ class EventSeeder extends Seeder
     }
     
     private function generateDonorDarahContent($eventType, $organizer)
-    {
-        return "
-<h3>Tentang Kegiatan Donor Darah</h3>
-<p>{$eventType} ini merupakan kegiatan rutin {$organizer} dalam mendukung ketersediaan stok darah di PMI. Setiap tetes darah yang Anda sumbangkan dapat menyelamatkan nyawa sesama yang membutuhkan.</p>
+{
+  return "Tentang Kegiatan Donor Darah
 
-<h3>Syarat Donor Darah</h3>
-<ul>
-<li>Usia 17-60 tahun (17 tahun diizinkan bila ada persetujuan tertulis dari orangtua)</li>
-<li>Berat badan minimal 45 kg</li>
-<li>Tekanan darah normal (sistole 100-170, diastole 70-100)</li>
-<li>Denyut nadi teratur (50-100 kali/menit)</li>
-<li>Hemoglobin normal (Pria: 12,5-17 g/dl, Wanita: 12-15,5 g/dl)</li>
-<li>Tidak sedang hamil, menyusui, atau haid</li>
-<li>Tidak sedang sakit atau dalam pengobatan</li>
-<li>Tidak memiliki riwayat penyakit menular (HIV, Hepatitis, Sifilis)</li>
-</ul>
+{$eventType} ini merupakan kegiatan rutin {$organizer} dalam mendukung ketersediaan stok darah di PMI. Setiap tetes darah yang Anda sumbangkan dapat menyelamatkan nyawa sesama yang membutuhkan.
 
-<h3>Persiapan Sebelum Donor</h3>
-<ul>
-<li>Istirahat cukup (tidur minimal 5 jam)</li>
-<li>Makan makanan bergizi 4 jam sebelum donor</li>
-<li>Minum air putih yang cukup</li>
-<li>Tidak mengonsumsi obat-obatan</li>
-<li>Tidak mengonsumsi alkohol 24 jam sebelumnya</li>
-<li>Membawa identitas diri (KTP/SIM/Paspor)</li>
-</ul>
+Syarat Donor Darah:
+• Usia 17-60 tahun (17 tahun diizinkan bila ada persetujuan tertulis dari orangtua)
+• Berat badan minimal 45 kg
+• Tekanan darah normal (sistole 100-170, diastole 70-100)
+• Denyut nadi teratur (50-100 kali/menit)
+• Hemoglobin normal (Pria: 12,5-17 g/dl, Wanita: 12-15,5 g/dl)
+• Tidak sedang hamil, menyusui, atau haid
+• Tidak sedang sakit atau dalam pengobatan
+• Tidak memiliki riwayat penyakit menular (HIV, Hepatitis, Sifilis)
 
-<h3>Fasilitas yang Disediakan</h3>
-<ul>
-<li>Pemeriksaan kesehatan gratis</li>
-<li>Cek golongan darah gratis</li>
-<li>Konsumsi dan snack</li>
-<li>Sertifikat donor darah</li>
-<li>Kartu donor darah</li>
-<li>Doorprize menarik</li>
-</ul>
+Persiapan Sebelum Donor:
+• Istirahat cukup (tidur minimal 5 jam)
+• Makan makanan bergizi 4 jam sebelum donor
+• Minum air putih yang cukup
+• Tidak mengonsumsi obat-obatan
+• Tidak mengonsumsi alkohol 24 jam sebelumnya
+• Membawa identitas diri (KTP/SIM/Paspor)
 
-<h3>Manfaat Donor Darah</h3>
-<ul>
-<li>Membantu menyelamatkan nyawa sesama</li>
-<li>Mendapat pemeriksaan kesehatan gratis</li>
-<li>Membantu menurunkan risiko penyakit jantung</li>
-<li>Membantu membakar kalori</li>
-<li>Menstimulasi produksi sel darah merah baru</li>
-<li>Mendapat pahala dan kepuasan batin</li>
-</ul>
+Fasilitas yang Disediakan:
+• Pemeriksaan kesehatan gratis
+• Cek golongan darah gratis
+• Konsumsi dan snack
+• Sertifikat donor darah
+• Kartu donor darah
+• Doorprize menarik
 
-<p><strong>Catatan Penting:</strong> Donor darah aman dan tidak berbahaya. Semua alat yang digunakan steril dan sekali pakai. Mari bergabung dalam aksi kemanusiaan ini!</p>
-        ";
-    }
-    
-    private function generatePelatihanPMIContent($eventType, $topic, $organizer)
-    {
-        return "
-<h3>Tentang Pelatihan</h3>
-<p>{$eventType} ini diselenggarakan oleh {$organizer} untuk meningkatkan kemampuan masyarakat dalam bidang {$topic} dan kesiapsiagaan menghadapi situasi darurat.</p>
+Manfaat Donor Darah:
+• Membantu menyelamatkan nyawa sesama
+• Mendapat pemeriksaan kesehatan gratis
+• Membantu menurunkan risiko penyakit jantung
+• Membantu membakar kalori
+• Menstimulasi produksi sel darah merah baru
+• Mendapat pahala dan kepuasan batin
 
-<h3>Tujuan Pelatihan</h3>
-<ul>
-<li>Memberikan pengetahuan dasar tentang {$topic}</li>
-<li>Melatih keterampilan pertolongan pertama</li>
-<li>Meningkatkan kesadaran akan pentingnya kesiapsiagaan</li>
-<li>Membentuk relawan siaga di tingkat desa</li>
-<li>Membangun jejaring kepalangmerahan</li>
-</ul>
-
-<h3>Materi yang Akan Dipelajari</h3>
-<ul>
-<li>Prinsip-prinsip dasar PMI dan Gerakan Palang Merah</li>
-<li>Teknik pertolongan pertama pada kecelakaan</li>
-<li>Penanganan luka dan perdarahan</li>
-<li>Resusitasi jantung paru (RJP)</li>
-<li>Penanganan patah tulang dan terkilir</li>
-<li>Manajemen bencana dan evakuasi</li>
-<li>Komunikasi dalam situasi darurat</li>
-</ul>
-
-<h3>Fasilitas Pelatihan</h3>
-<ul>
-<li>Modul pelatihan lengkap</li>
-<li>Praktik langsung dengan alat peraga</li>
-<li>Sertifikat kelulusan dari PMI</li>
-<li>Kartu anggota relawan (bagi yang berminat)</li>
-<li>Konsumsi selama pelatihan</li>
-<li>Kit P3K untuk peserta terbaik</li>
-</ul>
-
-<h3>Persyaratan Peserta</h3>
-<ul>
-<li>Usia minimal 16 tahun</li>
-<li>Sehat jasmani dan rohani</li>
-<li>Memiliki motivasi tinggi untuk membantu sesama</li>
-<li>Bersedia mengikuti pelatihan hingga selesai</li>
-<li>Membawa alat tulis dan buku catatan</li>
-</ul>
-
-<h3>Setelah Pelatihan</h3>
-<ul>
-<li>Peserta dapat bergabung menjadi relawan PMI</li>
-<li>Mendapat undangan untuk pelatihan lanjutan</li>
-<li>Dapat membantu dalam kegiatan kemanusiaan</li>
-<li>Menjadi bagian dari jaringan siaga bencana desa</li>
-</ul>
-
-<p><strong>Mari Bergabung!</strong> Jadilah bagian dari gerakan kemanusiaan dan siap membantu sesama dalam situasi darurat. Ilmu yang didapat akan sangat bermanfaat untuk diri sendiri, keluarga, dan masyarakat.</p>
-        ";
-    }
+Catatan Penting: Donor darah aman dan tidak berbahaya. Semua alat yang digunakan steril dan sekali pakai. Mari bergabung dalam aksi kemanusiaan ini!";
 }
+
+private function generatePelatihanPMIContent($eventType, $topic, $organizer)
+{
+  return "Tentang Pelatihan
+
+{$eventType} ini diselenggarakan oleh {$organizer} untuk meningkatkan kemampuan masyarakat dalam bidang {$topic} dan kesiapsiagaan menghadapi situasi darurat.
+
+Tujuan Pelatihan:
+• Memberikan pengetahuan dasar tentang {$topic}
+• Melatih keterampilan pertolongan pertama
+• Meningkatkan kesadaran akan pentingnya kesiapsiagaan
+• Membentuk relawan siaga di tingkat desa
+• Membangun jejaring kepalangmerahan
+
+Materi yang Akan Dipelajari:
+• Prinsip-prinsip dasar PMI dan Gerakan Palang Merah
+• Teknik pertolongan pertama pada kecelakaan
+• Penanganan luka dan perdarahan
+• Resusitasi jantung paru (RJP)
+• Penanganan patah tulang dan terkilir
+• Manajemen bencana dan evakuasi
+• Komunikasi dalam situasi darurat
+
+Fasilitas Pelatihan:
+• Modul pelatihan lengkap
+• Praktik langsung dengan alat peraga
+• Sertifikat kelulusan dari PMI
+• Kartu anggota relawan (bagi yang berminat)
+• Konsumsi selama pelatihan
+• Kit P3K untuk peserta terbaik
+
+Persyaratan Peserta:
+• Usia minimal 16 tahun
+• Sehat jasmani dan rohani
+• Memiliki motivasi tinggi untuk membantu sesama
+• Bersedia mengikuti pelatihan hingga selesai
+• Membawa alat tulis dan buku catatan
+
+Setelah Pelatihan:
+• Peserta dapat bergabung menjadi relawan PMI
+• Mendapat undangan untuk pelatihan lanjutan
+• Dapat membantu dalam kegiatan kemanusiaan
+• Menjadi bagian dari jaringan siaga bencana desa
+
+Mari Bergabung! Jadilah bagian dari gerakan kemanusiaan dan siap membantu sesama dalam situasi darurat. Ilmu yang didapat akan sangat bermanfaat untuk diri sendiri, keluarga, dan masyarakat.";
+}
+}
+
+//     private function generateDonorDarahContent($eventType, $organizer)
+//     {
+//         return "
+// <h3>Tentang Kegiatan Donor Darah</h3>
+// <p>{$eventType} ini merupakan kegiatan rutin {$organizer} dalam mendukung ketersediaan stok darah di PMI. Setiap tetes darah yang Anda sumbangkan dapat menyelamatkan nyawa sesama yang membutuhkan.</p>
+
+// <h3>Syarat Donor Darah</h3>
+// <ul>
+// <li>Usia 17-60 tahun (17 tahun diizinkan bila ada persetujuan tertulis dari orangtua)</li>
+// <li>Berat badan minimal 45 kg</li>
+// <li>Tekanan darah normal (sistole 100-170, diastole 70-100)</li>
+// <li>Denyut nadi teratur (50-100 kali/menit)</li>
+// <li>Hemoglobin normal (Pria: 12,5-17 g/dl, Wanita: 12-15,5 g/dl)</li>
+// <li>Tidak sedang hamil, menyusui, atau haid</li>
+// <li>Tidak sedang sakit atau dalam pengobatan</li>
+// <li>Tidak memiliki riwayat penyakit menular (HIV, Hepatitis, Sifilis)</li>
+// </ul>
+
+// <h3>Persiapan Sebelum Donor</h3>
+// <ul>
+// <li>Istirahat cukup (tidur minimal 5 jam)</li>
+// <li>Makan makanan bergizi 4 jam sebelum donor</li>
+// <li>Minum air putih yang cukup</li>
+// <li>Tidak mengonsumsi obat-obatan</li>
+// <li>Tidak mengonsumsi alkohol 24 jam sebelumnya</li>
+// <li>Membawa identitas diri (KTP/SIM/Paspor)</li>
+// </ul>
+
+// <h3>Fasilitas yang Disediakan</h3>
+// <ul>
+// <li>Pemeriksaan kesehatan gratis</li>
+// <li>Cek golongan darah gratis</li>
+// <li>Konsumsi dan snack</li>
+// <li>Sertifikat donor darah</li>
+// <li>Kartu donor darah</li>
+// <li>Doorprize menarik</li>
+// </ul>
+
+// <h3>Manfaat Donor Darah</h3>
+// <ul>
+// <li>Membantu menyelamatkan nyawa sesama</li>
+// <li>Mendapat pemeriksaan kesehatan gratis</li>
+// <li>Membantu menurunkan risiko penyakit jantung</li>
+// <li>Membantu membakar kalori</li>
+// <li>Menstimulasi produksi sel darah merah baru</li>
+// <li>Mendapat pahala dan kepuasan batin</li>
+// </ul>
+
+// <p><strong>Catatan Penting:</strong> Donor darah aman dan tidak berbahaya. Semua alat yang digunakan steril dan sekali pakai. Mari bergabung dalam aksi kemanusiaan ini!</p>
+//         ";
+//     }
+    
+//     private function generatePelatihanPMIContent($eventType, $topic, $organizer)
+//     {
+//         return "
+// <h3>Tentang Pelatihan</h3>
+// <p>{$eventType} ini diselenggarakan oleh {$organizer} untuk meningkatkan kemampuan masyarakat dalam bidang {$topic} dan kesiapsiagaan menghadapi situasi darurat.</p>
+
+// <h3>Tujuan Pelatihan</h3>
+// <ul>
+// <li>Memberikan pengetahuan dasar tentang {$topic}</li>
+// <li>Melatih keterampilan pertolongan pertama</li>
+// <li>Meningkatkan kesadaran akan pentingnya kesiapsiagaan</li>
+// <li>Membentuk relawan siaga di tingkat desa</li>
+// <li>Membangun jejaring kepalangmerahan</li>
+// </ul>
+
+// <h3>Materi yang Akan Dipelajari</h3>
+// <ul>
+// <li>Prinsip-prinsip dasar PMI dan Gerakan Palang Merah</li>
+// <li>Teknik pertolongan pertama pada kecelakaan</li>
+// <li>Penanganan luka dan perdarahan</li>
+// <li>Resusitasi jantung paru (RJP)</li>
+// <li>Penanganan patah tulang dan terkilir</li>
+// <li>Manajemen bencana dan evakuasi</li>
+// <li>Komunikasi dalam situasi darurat</li>
+// </ul>
+
+// <h3>Fasilitas Pelatihan</h3>
+// <ul>
+// <li>Modul pelatihan lengkap</li>
+// <li>Praktik langsung dengan alat peraga</li>
+// <li>Sertifikat kelulusan dari PMI</li>
+// <li>Kartu anggota relawan (bagi yang berminat)</li>
+// <li>Konsumsi selama pelatihan</li>
+// <li>Kit P3K untuk peserta terbaik</li>
+// </ul>
+
+// <h3>Persyaratan Peserta</h3>
+// <ul>
+// <li>Usia minimal 16 tahun</li>
+// <li>Sehat jasmani dan rohani</li>
+// <li>Memiliki motivasi tinggi untuk membantu sesama</li>
+// <li>Bersedia mengikuti pelatihan hingga selesai</li>
+// <li>Membawa alat tulis dan buku catatan</li>
+// </ul>
+
+// <h3>Setelah Pelatihan</h3>
+// <ul>
+// <li>Peserta dapat bergabung menjadi relawan PMI</li>
+// <li>Mendapat undangan untuk pelatihan lanjutan</li>
+// <li>Dapat membantu dalam kegiatan kemanusiaan</li>
+// <li>Menjadi bagian dari jaringan siaga bencana desa</li>
+// </ul>
+
+// <p><strong>Mari Bergabung!</strong> Jadilah bagian dari gerakan kemanusiaan dan siap membantu sesama dalam situasi darurat. Ilmu yang didapat akan sangat bermanfaat untuk diri sendiri, keluarga, dan masyarakat.</p>
+//         ";
+//     }
+// }
