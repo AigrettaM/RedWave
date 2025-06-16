@@ -137,16 +137,6 @@
         </div>
     </section>
 
-    <!-- Call to Action Card -->
-    <section class="text-center py-4 bg-gray-100 shadow-lg">
-        <div class="max-w-10xl mx-auto bg-white rounded-xl shadow-lg p-10">
-            <h2 class="text-3xl font-bold mb-6">Siap Menjadi Pahlawan?</h2>
-            <div class="space-x-4">
-                <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold transition">Donor Sekarang</button>
-                <a href="{{ url('lokasi') }}" class="bg-gray-200 hover:bg-gray-300 text-black px-6 py-3 rounded-full font-semibold transition">Lihat Lokasi Terdekat</a>
-            </div>
-        </div>
-    </section>
 </div>
 @endsection
 

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\DependentDropdownController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DonorController;
@@ -24,39 +25,54 @@ use App\Http\Controllers\LokasiController;
 */
 
 // ========================================
-// PUBLIC ROUTES
+// PUBLIC ROUTES (NO AUTH REQUIRED)
 // ========================================
 
-// Home route
-Route::get('/', [HomeController::class, 'index'])->name('welcome');
+// Welcome/Landing Page - Accessible without login
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+
+// Home redirect - untuk navigasi yang lebih intuitif
+Route::get('/home', function() {
+    if (auth()->check()) {
+        $user = auth()->user();
+        if ($user->role === 'admin' || $user->is_admin == 1) {
+            return redirect()->route('admin.dashboard');
+        }
+        return redirect()->route('user.home');
+    }
+    return redirect()->route('welcome');
+})->name('home');
 
 // Public Article routes
 Route::get('/article', [ArticleController::class, 'index'])->name('article.index');
 Route::get('/article/{slug}', [ArticleController::class, 'show'])->name('article.show');
 
-// Public Contact route
+// Public Information routes
 Route::get('/contact', function() {
     return view('informasi.contact');
 })->name('contact');
 
-// Public About route
 Route::get('/about', function() {
     return view('informasi.about');
 })->name('about');
 
-// Routes untuk halaman publik lokasi
+// Public Location routes
 Route::get('/lokasi-donor', [LokasiController::class, 'publicIndex'])->name('public.lokasi.index');
 Route::get('/lokasi-donor/{lokasi}', [LokasiController::class, 'publicShow'])->name('public.lokasi.show');
 
 // PUBLIC EVENTS
 Route::prefix('informasi')->name('informasi.')->group(function () {
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
-    Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
-    Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+    
+    // Event creation (requires auth)
+    Route::middleware('auth')->group(function () {
+        Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
+        Route::post('/events', [EventController::class, 'store'])->name('events.store');
+    });
 });
 
-// Dependent Dropdown Routes (Public API)
+// Public API Routes for Dependent Dropdowns
 Route::prefix('api')->name('api.')->group(function () {
     Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
     Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
@@ -88,7 +104,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
     
-    // Password reset routes (if needed)
+    // Password reset routes (uncomment if needed)
     // Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.request');
     // Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
     // Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('password.reset');
@@ -100,9 +116,9 @@ Route::middleware('guest')->group(function () {
 // ========================================
 Route::middleware('auth')->group(function () {
     
-    // Logout route
+    // Logout routes
     Route::delete('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout.post'); // Alternative for forms that can't use DELETE
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout.post');
     
     // Dashboard redirect berdasarkan role
     Route::get('/dashboard', function() {
@@ -115,27 +131,15 @@ Route::middleware('auth')->group(function () {
         }
     })->name('dashboard');
     
-    // User home route
-    Route::get('/user/home', function() {
-        $user = auth()->user();
-        $profile = $user->profile;
-        
-        // Basic stats for user dashboard
-        $userStats = [
-            'has_profile' => $profile ? true : false,
-            'donor_count' => $user->donors()->count(),
-            'last_donation' => $user->donors()->latest()->first(),
-        ];
-        
-        return view('user.home', compact('userStats'));
-    })->name('user.home');
+    // User Dashboard/Home
+    Route::get('/user/home', [HomeController::class, 'userHome'])->name('user.home');
     
     // Profile Routes
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'show'])->name('show');
         Route::get('/form', [ProfileController::class, 'form'])->name('form');
+        Route::get('/edit', [ProfileController::class, 'form'])->name('edit');
         Route::post('/save', [ProfileController::class, 'save'])->name('save');
-        Route::get('/edit', [ProfileController::class, 'form'])->name('edit'); // Alias for form
     });
     
     // USER DONOR ROUTES
@@ -171,7 +175,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/reschedule/{donor}', [DonorController::class, 'reschedule'])->name('reschedule');
     });
     
-    // USER EVENT ROUTES (for authenticated users)
+    // USER EVENT ROUTES
     Route::prefix('my-events')->name('my-events.')->group(function () {
         Route::get('/', [EventController::class, 'myEvents'])->name('index');
         Route::post('/{event}/join', [EventController::class, 'joinEvent'])->name('join');
@@ -185,36 +189,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
     // Admin Dashboard
-    Route::get('/dashboard', function() {
-        // Hitung statistik untuk dashboard
-        $totalUsers = \App\Models\User::count();
-        $totalProfiles = \App\Models\Profile::count();
-        $totalDonors = \App\Models\Donor::count();
-        $totalEvents = \App\Models\Event::count();
-        $totalLokasi = \App\Models\Lokasi::count();
-        
-        // Recent activity
-        $recentUsers = \App\Models\User::latest()->limit(5)->get();
-        $recentDonors = \App\Models\Donor::with('user')->latest()->limit(5)->get();
-        
-        // Monthly statistics
-        $monthlyStats = [
-            'users' => \App\Models\User::whereMonth('created_at', now()->month)->count(),
-            'donors' => \App\Models\Donor::whereMonth('created_at', now()->month)->count(),
-            'events' => \App\Models\Event::whereMonth('created_at', now()->month)->count(),
-        ];
-        
-        return view('admin.dashboard', compact(
-            'totalUsers', 
-            'totalProfiles', 
-            'totalDonors', 
-            'totalEvents', 
-            'totalLokasi',
-            'recentUsers',
-            'recentDonors',
-            'monthlyStats'
-        ));
-    })->name('dashboard');
+    Route::get('/dashboard', [HomeController::class, 'adminDashboard'])->name('dashboard');
     
     // User Management
     Route::prefix('users')->name('users.')->group(function () {
@@ -378,4 +353,3 @@ Route::prefix('ajax')->name('ajax.')->middleware('auth')->group(function () {
     Route::get('/search/donors', [DonorController::class, 'searchDonors'])->name('search.donors');
     Route::get('/search/events', [EventController::class, 'searchEvents'])->name('search.events');
 });
-

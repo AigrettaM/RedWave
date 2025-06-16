@@ -55,16 +55,48 @@
                             <label for="kota" class="block text-sm font-medium text-gray-700 mb-2">
                                 Kota <span class="text-red-500">*</span>
                             </label>
-                            <select id="kota" 
-                                    name="kota" 
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 @error('kota') border-red-500 @enderror">
-                                <option value="">Pilih Kota</option>
-                                <option value="Jakarta Pusat" {{ old('kota') == 'Jakarta Pusat' ? 'selected' : '' }}>Jakarta Pusat</option>
-                                <option value="Jakarta Utara" {{ old('kota') == 'Jakarta Utara' ? 'selected' : '' }}>Jakarta Utara</option>
-                                <option value="Jakarta Selatan" {{ old('kota') == 'Jakarta Selatan' ? 'selected' : '' }}>Jakarta Selatan</option>
-                                <option value="Jakarta Barat" {{ old('kota') == 'Jakarta Barat' ? 'selected' : '' }}>Jakarta Barat</option>
-                                <option value="Jakarta Timur" {{ old('kota') == 'Jakarta Timur' ? 'selected' : '' }}>Jakarta Timur</option>
-                            </select>
+                                <select id="kota" name="kota" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 @error('kota') border-red-500 @enderror">
+                                    <option value="">Pilih Provinsi</option>
+                                    <option value="Aceh" {{ old('kota') == 'Aceh' ? 'selected' : '' }}>Aceh</option>
+                                    <option value="Sumatera Utara" {{ old('kota') == 'Sumatera Utara' ? 'selected' : '' }}>Sumatera Utara</option>
+                                    <option value="Sumatera Barat" {{ old('kota') == 'Sumatera Barat' ? 'selected' : '' }}>Sumatera Barat</option>
+                                    <option value="Riau" {{ old('kota') == 'Riau' ? 'selected' : '' }}>Riau</option>
+                                    <option value="Kepulauan Riau" {{ old('kota') == 'Kepulauan Riau' ? 'selected' : '' }}>Kepulauan Riau</option>
+                                    <option value="Jambi" {{ old('kota') == 'Jambi' ? 'selected' : '' }}>Jambi</option>
+                                    <option value="Sumatera Selatan" {{ old('kota') == 'Sumatera Selatan' ? 'selected' : '' }}>Sumatera Selatan</option>
+                                    <option value="Kepulauan Bangka Belitung" {{ old('kota') == 'Kepulauan Bangka Belitung' ? 'selected' : '' }}>Kepulauan Bangka Belitung</option>
+                                    <option value="Bengkulu" {{ old('kota') == 'Bengkulu' ? 'selected' : '' }}>Bengkulu</option>
+                                    <option value="Lampung" {{ old('kota') == 'Lampung' ? 'selected' : '' }}>Lampung</option>
+                                    <option value="DKI Jakarta" {{ old('kota') == 'DKI Jakarta' ? 'selected' : '' }}>DKI Jakarta</option>
+                                    <option value="Banten" {{ old('kota') == 'Banten' ? 'selected' : '' }}>Banten</option>
+                                    <option value="Jawa Barat" {{ old('kota') == 'Jawa Barat' ? 'selected' : '' }}>Jawa Barat</option>
+                                    <option value="Jawa Tengah" {{ old('kota') == 'Jawa Tengah' ? 'selected' : '' }}>Jawa Tengah</option>
+                                    <option value="DI Yogyakarta" {{ old('kota') == 'DI Yogyakarta' ? 'selected' : '' }}>DI Yogyakarta</option>
+                                    <option value="Jawa Timur" {{ old('kota') == 'Jawa Timur' ? 'selected' : '' }}>Jawa Timur</option>
+                                    <option value="Bali" {{ old('kota') == 'Bali' ? 'selected' : '' }}>Bali</option>
+                                    <option value="Nusa Tenggara Barat" {{ old('kota') == 'Nusa Tenggara Barat' ? 'selected' : '' }}>Nusa Tenggara Barat</option>
+                                    <option value="Nusa Tenggara Timur" {{ old('kota') == 'Nusa Tenggara Timur' ? 'selected' : '' }}>Nusa Tenggara Timur</option>
+                                    <option value="Kalimantan Barat" {{ old('kota') == 'Kalimantan Barat' ? 'selected' : '' }}>Kalimantan Barat</option>
+                                    <option value="Kalimantan Tengah" {{ old('kota') == 'Kalimantan Tengah' ? 'selected' : '' }}>Kalimantan Tengah</option>
+                                    <option value="Kalimantan Selatan" {{ old('kota') == 'Kalimantan Selatan' ? 'selected' : '' }}>Kalimantan Selatan</option>
+                                    <option value="Kalimantan Timur" {{ old('kota') == 'Kalimantan Timur' ? 'selected' : '' }}>Kalimantan Timur</option>
+                                    <option value="Kalimantan Utara" {{ old('kota') == 'Kalimantan Utara' ? 'selected' : '' }}>Kalimantan Utara</option>
+                                    <option value="Sulawesi Utara" {{ old('kota') == 'Sulawesi Utara' ? 'selected' : '' }}>Sulawesi Utara</option>
+                                    <option value="Gorontalo" {{ old('kota') == 'Gorontalo' ? 'selected' : '' }}>Gorontalo</option>
+                                    <option value="Sulawesi Tengah" {{ old('kota') == 'Sulawesi Tengah' ? 'selected' : '' }}>Sulawesi Tengah</option>
+                                    <option value="Sulawesi Barat" {{ old('kota') == 'Sulawesi Barat' ? 'selected' : '' }}>Sulawesi Barat</option>
+                                    <option value="Sulawesi Selatan" {{ old('kota') == 'Sulawesi Selatan' ? 'selected' : '' }}>Sulawesi Selatan</option>
+                                    <option value="Sulawesi Tenggara" {{ old('kota') == 'Sulawesi Tenggara' ? 'selected' : '' }}>Sulawesi Tenggara</option>
+                                    <option value="Maluku" {{ old('kota') == 'Maluku' ? 'selected' : '' }}>Maluku</option>
+                                    <option value="Maluku Utara" {{ old('kota') == 'Maluku Utara' ? 'selected' : '' }}>Maluku Utara</option>
+                                    <option value="Papua" {{ old('kota') == 'Papua' ? 'selected' : '' }}>Papua</option>
+                                    <option value="Papua Barat" {{ old('kota') == 'Papua Barat' ? 'selected' : '' }}>Papua Barat</option>
+                                    <option value="Papua Tengah" {{ old('kota') == 'Papua Tengah' ? 'selected' : '' }}>Papua Tengah</option>
+                                    <option value="Papua Pegunungan" {{ old('kota') == 'Papua Pegunungan' ? 'selected' : '' }}>Papua Pegunungan</option>
+                                    <option value="Papua Selatan" {{ old('kota') == 'Papua Selatan' ? 'selected' : '' }}>Papua Selatan</option>
+                                    <option value="Papua Barat Daya" {{ old('kota') == 'Papua Barat Daya' ? 'selected' : '' }}>Papua Barat Daya</option>
+                                </select>
+
                             @error('kota')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
