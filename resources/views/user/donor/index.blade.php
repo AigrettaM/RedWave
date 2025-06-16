@@ -371,30 +371,6 @@
               </div>
           @endif
 
-          <!-- Quick Actions -->
-          <div class="bg-white rounded-lg shadow-md p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                  <i class="fas fa-bolt mr-2 text-yellow-500"></i>
-                  Aksi Cepat
-              </h3>
-              <div class="space-y-3">
-                  <a href="{{ route('donor.history') }}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <i class="fas fa-history text-gray-600 mr-3"></i>
-                      <span class="text-sm font-medium">Riwayat Donor</span>
-                  </a>
-                  @if($profile)
-                      <a href="{{ route('profile.show') }}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <i class="fas fa-user text-gray-600 mr-3"></i>
-                          <span class="text-sm font-medium">Edit Profile</span>
-                      </a>
-                  @endif
-                  <a href="/contact" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <i class="fas fa-question-circle text-gray-600 mr-3"></i>
-                      <span class="text-sm font-medium">Bantuan</span>
-                  </a>
-              </div>
-          </div>
-
           <!-- Quick Info -->
           <div class="bg-blue-50 rounded-lg p-6">
               <h3 class="text-lg font-semibold text-blue-800 mb-4">ℹ️ Info Penting</h3>

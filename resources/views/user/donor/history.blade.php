@@ -129,27 +129,6 @@
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter Status</label>
-                    <select id="statusFilter" 
-                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                        <option value="">Semua Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Disetujui</option>
-                        <option value="completed">Selesai</option>
-                        <option value="rejected">Ditolak</option>
-                        <option value="cancelled">Dibatalkan</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Urutkan</label>
-                    <select id="sortFilter" 
-                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                        <option value="newest">Terbaru</option>
-                        <option value="oldest">Terlama</option>
-                        <option value="code">Kode Donor</option>
-                    </select>
-                </div>
             </div>
         </div>
 

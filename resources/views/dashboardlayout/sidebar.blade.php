@@ -63,7 +63,7 @@
             @if(Auth::check() && Auth::user()->role === 'user')
 
                  <li>
-                    <a href="/profile" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
+                    <a href="/user/profile" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('user.orders.*') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-user mr-3"></i>
                         Profile
                     </a>

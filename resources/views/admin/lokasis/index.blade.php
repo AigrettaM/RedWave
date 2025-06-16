@@ -153,11 +153,6 @@
                             <i class="fas fa-eraser mr-1"></i>
                             Clear Filter
                         </button>
-                        <button onclick="exportData()" 
-                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
-                            <i class="fas fa-download mr-1"></i>
-                            Export Data
-                        </button>
                     </div>
                 </div>
             </div>

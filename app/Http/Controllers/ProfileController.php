@@ -37,28 +37,44 @@ class ProfileController extends Controller
         }
     }
 
-    /**
-     * Form untuk create/edit profile
-     */
-    public function form()
-    {
-        try {
-            $user = auth()->user();
-            $profile = $user->profile;
+public function form()
+{
+    try {
+        $user = auth()->user();
+        
+        // Cek user
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        
+        $profile = $user->profile;
 
-            // Generate KDD dan ID Donor jika belum ada profile
-            $kdd = $profile ? $profile->donor_code : 'UTDC-' . Str::upper(Str::random(6));
-            $donorId = $profile ? $profile->donor_id : 'D' . Str::upper(Str::random(12));
+        // Debug profile
+        \Log::info('User ID: ' . $user->id);
+        \Log::info('Profile exists: ' . ($profile ? 'Yes' : 'No'));
+        
+        if ($profile) {
+            \Log::info('Profile ID: ' . $profile->id);
+            \Log::info('Province ID: ' . $profile->province_id);
+            \Log::info('City ID: ' . $profile->city_id);
+        }
 
-            // Fetch provinces untuk dropdown
-            $provinces = Province::orderBy('name')->get();
-            
-            // Jika edit, ambil data wilayah yang sudah dipilih
-            $cities = collect();
-            $districts = collect();
-            $villages = collect();
-            
-            if ($profile && $profile->province_id) {
+        // Generate KDD dan ID Donor
+        $kdd = $profile ? $profile->donor_code : 'UTDC-' . Str::upper(Str::random(6));
+        $donorId = $profile ? $profile->donor_id : 'D' . Str::upper(Str::random(12));
+
+        // Fetch provinces
+        $provinces = Province::orderBy('name')->get();
+        \Log::info('Provinces count: ' . $provinces->count());
+        
+        // Initialize collections
+        $cities = collect();
+        $districts = collect();
+        $villages = collect();
+        
+        // Load existing location data if editing
+        if ($profile && $profile->province_id) {
+            try {
                 $cities = City::where('province_id', $profile->province_id)->orderBy('name')->get();
                 
                 if ($profile->city_id) {
@@ -68,22 +84,29 @@ class ProfileController extends Controller
                         $villages = Village::where('district_id', $profile->district_id)->orderBy('name')->get();
                     }
                 }
+            } catch (\Exception $e) {
+                \Log::warning('Error loading location data: ' . $e->getMessage());
             }
-
-            return view('user.profile.form', compact(
-                'profile', 
-                'provinces', 
-                'cities',
-                'districts',
-                'villages',
-                'kdd', 
-                'donorId'
-            ));
-        } catch (\Exception $e) {
-            Log::error('Error loading profile form: ' . $e->getMessage());
-            return redirect()->route('user.home')->with('error', 'Terjadi kesalahan saat memuat form profile.');
         }
+
+        return view('user.profile.form', compact(
+            'profile', 
+            'provinces', 
+            'cities',
+            'districts',
+            'villages',
+            'kdd', 
+            'donorId'
+        ));
+        
+    } catch (\Exception $e) {
+        \Log::error('Profile form error: ' . $e->getMessage());
+        \Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+        
+        // Untuk debug, tampilkan error
+        dd($e->getMessage(), $e->getFile(), $e->getLine());
     }
+}
 
     /**
      * Store atau Update profile

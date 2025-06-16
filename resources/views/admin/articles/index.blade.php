@@ -256,19 +256,6 @@
     </div>
 </div>
 
-<!-- Debug Section (Hapus setelah testing) -->
-@if(config('app.debug') && $articles->count() > 0)
-<div class="mt-6 bg-gray-100 p-4 rounded-lg">
-    <h4 class="font-bold mb-2">Debug Info (Artikel Pertama):</h4>
-    @php $firstArticle = $articles->first(); @endphp
-    <div class="text-sm space-y-1">
-        <div><strong>Featured Image Path:</strong> {{ $firstArticle->featured_image ?? 'null' }}</div>
-        <div><strong>Full URL:</strong> {{ $firstArticle->featured_image ? asset('storage/' . $firstArticle->featured_image) : 'null' }}</div>
-        <div><strong>File Exists:</strong> {{ $firstArticle->featured_image && Storage::disk('public')->exists($firstArticle->featured_image) ? 'Yes' : 'No' }}</div>
-        <div><strong>Storage Path:</strong> {{ storage_path('app/public/' . ($firstArticle->featured_image ?? '')) }}</div>
-    </div>
-</div>
-@endif
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -13,19 +13,8 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\AdminEventController;
 use App\Http\Controllers\LokasiController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
 // ========================================
-// PUBLIC ROUTES (NO AUTH REQUIRED)
+// WELCOME & HOME ROUTES
 // ========================================
 
 // Welcome/Landing Page - Accessible without login
@@ -57,10 +46,13 @@ Route::get('/about', function() {
 })->name('about');
 
 // Public Location routes
-Route::get('/lokasi-donor', [LokasiController::class, 'publicIndex'])->name('public.lokasi.index');
-Route::get('/lokasi-donor/{lokasi}', [LokasiController::class, 'publicShow'])->name('public.lokasi.show');
+Route::get('/location', [LokasiController::class, 'publicIndex'])->name('location.index');
+Route::get('/location/{id}', [LokasiController::class, 'publicShow'])->name('location.show');
+Route::get('/location/nearby/search', [LokasiController::class, 'publicNearby'])->name('location.nearby');
 
-// PUBLIC EVENTS
+// ========================================
+// PUBLIC EVENTS (Alternative dengan prefix informasi)
+// ========================================
 Route::prefix('informasi')->name('informasi.')->group(function () {
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
@@ -72,13 +64,7 @@ Route::prefix('informasi')->name('informasi.')->group(function () {
     });
 });
 
-// Public API Routes for Dependent Dropdowns
-Route::prefix('api')->name('api.')->group(function () {
-    Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
-    Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
-    Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
-    Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
-});
+
 
 // Legacy support for old dropdown routes
 Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
@@ -86,7 +72,9 @@ Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cit
 Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
 Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
 
-// BOTMAN Routes
+// ========================================
+// BOTMAN ROUTES
+// ========================================
 Route::get('/botman/iframe', function() {
     return view('botman.iframe');
 })->name('botman.iframe');
@@ -103,12 +91,6 @@ Route::middleware('guest')->group(function () {
     // Login routes
     Route::get('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
-    
-    // Password reset routes (uncomment if needed)
-    // Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.request');
-    // Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
-    // Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('password.reset');
-    // Route::post('/reset-password', [AuthController::class, 'updatePassword'])->name('password.update');
 });
 
 // ========================================
@@ -134,15 +116,19 @@ Route::middleware('auth')->group(function () {
     // User Dashboard/Home
     Route::get('/user/home', [HomeController::class, 'userHome'])->name('user.home');
     
-    // Profile Routes
-    Route::prefix('profile')->name('profile.')->group(function () {
+    // ========================================
+    // USER PROFILE ROUTES - FIXED
+    // ========================================
+    Route::prefix('user/profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'show'])->name('show');
         Route::get('/form', [ProfileController::class, 'form'])->name('form');
         Route::get('/edit', [ProfileController::class, 'form'])->name('edit');
         Route::post('/save', [ProfileController::class, 'save'])->name('save');
     });
-    
+
+    // ========================================
     // USER DONOR ROUTES
+    // ========================================
     Route::prefix('donor')->name('donor.')->group(function () {
         Route::get('/', [DonorController::class, 'index'])->name('index');
         Route::post('/start', [DonorController::class, 'start'])->name('start');
@@ -175,7 +161,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/reschedule/{donor}', [DonorController::class, 'reschedule'])->name('reschedule');
     });
     
+    // ========================================
     // USER EVENT ROUTES
+    // ========================================
     Route::prefix('my-events')->name('my-events.')->group(function () {
         Route::get('/', [EventController::class, 'myEvents'])->name('index');
         Route::post('/{event}/join', [EventController::class, 'joinEvent'])->name('join');
@@ -191,7 +179,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Admin Dashboard
     Route::get('/dashboard', [HomeController::class, 'adminDashboard'])->name('dashboard');
     
-    // User Management
+    // ========================================
+    // USER MANAGEMENT
+    // ========================================
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('index');
         Route::get('/{id}/show', [ProfileController::class, 'show_admin'])->name('show');
@@ -205,7 +195,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/bulk-export', [ProfileController::class, 'bulkExport'])->name('bulk-export');
     });
     
-    // DONOR MANAGEMENT
     Route::prefix('donors')->name('donors.')->group(function () {
         Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
         Route::get('/export', [DonorController::class, 'adminExport'])->name('export');
@@ -223,8 +212,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/bulk-approve', [DonorController::class, 'bulkApprove'])->name('bulk-approve');
         Route::post('/bulk-reject', [DonorController::class, 'bulkReject'])->name('bulk-reject');
     });
-    
-    // EVENTS MANAGEMENT
+
     Route::prefix('events')->name('events.')->group(function () {
         Route::get('/', [AdminEventController::class, 'index'])->name('index');
         Route::get('/create', [AdminEventController::class, 'create'])->name('create');
@@ -245,7 +233,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{event}/participants/export', [AdminEventController::class, 'exportParticipants'])->name('participants.export');
     });
     
-    // LOKASI MANAGEMENT
     Route::prefix('lokasis')->name('lokasis.')->group(function () {
         Route::get('/', [LokasiController::class, 'index'])->name('index');
         Route::get('/create', [LokasiController::class, 'create'])->name('create');
@@ -261,9 +248,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         
         // Lokasi statistics
         Route::get('/{lokasi}/statistics', [LokasiController::class, 'statistics'])->name('statistics');
+        
+        // Bulk operations
+        Route::post('/bulk-status', [LokasiController::class, 'bulkStatus'])->name('bulk-status');
+        Route::delete('/bulk-delete', [LokasiController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/{lokasi}/toggle-status', [LokasiController::class, 'toggleStatus'])->name('toggle-status');
     });
     
-    // ARTICLES MANAGEMENT
     Route::prefix('articles')->name('articles.')->group(function () {
         Route::get('/', [ArticleController::class, 'adminIndex'])->name('index');
         Route::get('/create', [ArticleController::class, 'create'])->name('create');
@@ -285,7 +276,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/bulk-delete', [ArticleController::class, 'bulkDelete'])->name('bulk-delete');
     });
     
-    // SYSTEM MANAGEMENT
     Route::prefix('system')->name('system.')->group(function () {
         // Settings
         Route::get('/settings', function() {
@@ -316,8 +306,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             return redirect()->back()->with('success', 'Cache berhasil dibersihkan');
         })->name('cache.clear');
     });
-    
-    // REPORTS
+
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', function() {
             return view('admin.reports.index');
@@ -335,9 +324,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 });
 
-// ========================================
-// API ROUTES (for AJAX calls)
-// ========================================
 Route::prefix('ajax')->name('ajax.')->middleware('auth')->group(function () {
     // Profile related
     Route::get('/profile/{id}', [ProfileController::class, 'getProfile'])->name('profile.get');
