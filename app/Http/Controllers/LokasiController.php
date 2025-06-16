@@ -147,34 +147,31 @@ class LokasiController extends Controller
   /**
    * Display the specified resource for admin
    */
-  public function show(Lokasi $lokasi)
-  {
-      try {
-          // Load any relationships if needed
-          // $lokasi->load('donors', 'events');
+//   public function show(Lokasi $lokasi)
+//   {
+//       try {
+//           // Load any relationships if needed
+//           // $lokasi->load('donors', 'events');
 
-          return view('admin.lokasis.show', compact('lokasi'));
+//           return view('admin.lokasis.show', compact('lokasi'));
 
-      } catch (\Exception $e) {
-          Log::error('Error showing lokasi', [
-              'lokasi_id' => $lokasi->id,
-              'error' => $e->getMessage()
-          ]);
+//       } catch (\Exception $e) {
+//           Log::error('Error showing lokasi', [
+//               'lokasi_id' => $lokasi->id,
+//               'error' => $e->getMessage()
+//           ]);
 
-          return back()->with('error', 'Gagal memuat detail lokasi');
-      }
-  }
+//           return back()->with('error', 'Gagal memuat detail lokasi');
+//       }
+//   }
 
   /**
    * Show the form for editing the specified resource
    */
-  public function edit(Lokasi $lokasi)
-  {
-      return view('admin.lokasis.edit', compact('lokasi'));
-  }
-        return redirect()->route('admin.lokasis.index')
-                        ->with('success', 'Lokasi berhasil ditambahkan!');
-    }
+//     public function edit(Lokasi $lokasi)
+//   {
+//       return view('admin.lokasis.edit', compact('lokasi'));
+//   }
 
     /**
      * Display the specified resource - PERBAIKAN UNTUK ERROR 500
