@@ -12,6 +12,21 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\AdminEventController;
 use App\Http\Controllers\LokasiController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+// ========================================
+// PUBLIC ROUTES
+// ========================================
+
 // Home route
 Route::get('/', [HomeController::class, 'index'])->name('welcome');
 
@@ -24,128 +39,253 @@ Route::get('/contact', function() {
     return view('informasi.contact');
 })->name('contact');
 
-// Authentication Routes
-Route::group(['middleware' => 'guest'], function () {
-    Route::get('/register', [AuthController::class,'register'])->name('register');
-    Route::post('/register', [AuthController::class,'registerPost'])->name('register');
-    Route::get('/login', [AuthController::class, 'login'])->name('login');
-    Route::post('/login', [AuthController::class, 'loginPost'])->name('login');
-});
+// Public About route
+Route::get('/about', function() {
+    return view('informasi.about');
+})->name('about');
 
-// ✅ PERBAIKAN: Routes untuk user yang sudah login
-Route::group(['middleware'=> 'auth'], function () {
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
-    
-    // ✅ Route dashboard umum - redirect berdasarkan role
-    Route::get('/dashboard', function() {
-        $user = auth()->user();
-        
-        if ($user->role === 'admin') {
-            return redirect('/admin/dashboard'); 
-        } else {
-            return redirect()->route('/profile');
-        }
-    })->name('dashboard');
-    
-    Route::delete('/logout', [AuthController::class, 'logout'])->name('logout');
-});
-
-// Profile Routes
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/form', [ProfileController::class, 'form'])->name('profile.form');
-    Route::post('/profile/save', [ProfileController::class, 'save'])->name('profile.save');
-});
-
-// Admin - User Management
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/data-user', [ProfileController::class, 'index'])->name('profiles.index');
-    Route::delete('/data-user/{id}', [ProfileController::class, 'destroy'])->name('profiles.destroy');
-});
-
-// Dependent Dropdown Routes
-Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
-Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
-Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
-Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
-
-// USER DONOR ROUTES
-Route::middleware('auth')->prefix('donor')->name('donor.')->group(function () {
-    Route::get('/', [DonorController::class, 'index'])->name('index');
-    Route::post('/start', [DonorController::class, 'start'])->name('start');
-    Route::post('/cancel', [DonorController::class, 'cancel'])->name('cancel');
-    
-    Route::get('/location/{donor}', [DonorController::class, 'location'])->name('location');
-    Route::post('/location/{donor}', [DonorController::class, 'saveLocation'])->name('location.save');
-    
-    Route::get('/questions/{step}', [DonorController::class, 'questions'])->name('questions')->where('step', '[1-3]');
-    Route::post('/questions/{step}', [DonorController::class, 'saveQuestions'])->name('questions.save')->where('step', '[1-3]');
-    
-    Route::get('/consent', [DonorController::class, 'consent'])->name('consent');
-    Route::post('/consent', [DonorController::class, 'saveConsent'])->name('consent.save');
-    
-    Route::get('/success/{donor}', [DonorController::class, 'success'])->name('success');
-    Route::get('/history', [DonorController::class, 'history'])->name('history');
-    Route::get('/detail/{donor}', [DonorController::class, 'detail'])->name('detail');
-    Route::get('/certificate/{donor}', [DonorController::class, 'certificate'])->name('certificate');
-});
+// Routes untuk halaman publik lokasi
+Route::get('/lokasi-donor', [LokasiController::class, 'publicIndex'])->name('public.lokasi.index');
+Route::get('/lokasi-donor/{lokasi}', [LokasiController::class, 'publicShow'])->name('public.lokasi.show');
 
 // PUBLIC EVENTS
-Route::prefix('informasi')->group(function () {
+Route::prefix('informasi')->name('informasi.')->group(function () {
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 });
 
-// Routes untuk halaman publik lokasi
-Route::get('/lokasi-donor', [LokasiController::class, 'publicIndex'])->name('public.lokasi.index');
-Route::get('/lokasi-donor/{lokasi}', [LokasiController::class, 'publicShow'])->name('public.lokasi.show');
+// Dependent Dropdown Routes (Public API)
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
+    Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
+    Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
+    Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
+});
 
-// BOTMAN
+// Legacy support for old dropdown routes
+Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
+Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
+Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
+Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
+
+// BOTMAN Routes
 Route::get('/botman/iframe', function() {
     return view('botman.iframe');
-});
-Route::post('/botman', [BotManController::class, 'handle']);
+})->name('botman.iframe');
+Route::post('/botman', [BotManController::class, 'handle'])->name('botman.handle');
 
 // ========================================
-// ✅ ADMIN ROUTES - DIPERBAIKI INFINITE LOOP
+// AUTHENTICATION ROUTES (GUEST ONLY)
+// ========================================
+Route::middleware('guest')->group(function () {
+    // Registration routes
+    Route::get('/register', [AuthController::class, 'register'])->name('register');
+    Route::post('/register', [AuthController::class, 'registerPost'])->name('register.post');
+    
+    // Login routes
+    Route::get('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
+    
+    // Password reset routes (if needed)
+    // Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.request');
+    // Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    // Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('password.reset');
+    // Route::post('/reset-password', [AuthController::class, 'updatePassword'])->name('password.update');
+});
+
+// ========================================
+// AUTHENTICATED USER ROUTES
+// ========================================
+Route::middleware('auth')->group(function () {
+    
+    // Logout route
+    Route::delete('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout.post'); // Alternative for forms that can't use DELETE
+    
+    // Dashboard redirect berdasarkan role
+    Route::get('/dashboard', function() {
+        $user = auth()->user();
+        
+        if ($user->role === 'admin' || $user->is_admin == 1) {
+            return redirect()->route('admin.dashboard');
+        } else {
+            return redirect()->route('user.home');
+        }
+    })->name('dashboard');
+    
+    // User home route
+    Route::get('/user/home', function() {
+        $user = auth()->user();
+        $profile = $user->profile;
+        
+        // Basic stats for user dashboard
+        $userStats = [
+            'has_profile' => $profile ? true : false,
+            'donor_count' => $user->donors()->count(),
+            'last_donation' => $user->donors()->latest()->first(),
+        ];
+        
+        return view('user.home', compact('userStats'));
+    })->name('user.home');
+    
+    // Profile Routes
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('show');
+        Route::get('/form', [ProfileController::class, 'form'])->name('form');
+        Route::post('/save', [ProfileController::class, 'save'])->name('save');
+        Route::get('/edit', [ProfileController::class, 'form'])->name('edit'); // Alias for form
+    });
+    
+    // USER DONOR ROUTES
+    Route::prefix('donor')->name('donor.')->group(function () {
+        Route::get('/', [DonorController::class, 'index'])->name('index');
+        Route::post('/start', [DonorController::class, 'start'])->name('start');
+        Route::post('/cancel', [DonorController::class, 'cancel'])->name('cancel');
+        
+        // Location selection
+        Route::get('/location/{donor}', [DonorController::class, 'location'])->name('location');
+        Route::post('/location/{donor}', [DonorController::class, 'saveLocation'])->name('location.save');
+        
+        // Health questions (multi-step)
+        Route::get('/questions/{step}', [DonorController::class, 'questions'])
+             ->name('questions')
+             ->where('step', '[1-3]');
+        Route::post('/questions/{step}', [DonorController::class, 'saveQuestions'])
+             ->name('questions.save')
+             ->where('step', '[1-3]');
+        
+        // Consent form
+        Route::get('/consent', [DonorController::class, 'consent'])->name('consent');
+        Route::post('/consent', [DonorController::class, 'saveConsent'])->name('consent.save');
+        
+        // Success and history
+        Route::get('/success/{donor}', [DonorController::class, 'success'])->name('success');
+        Route::get('/history', [DonorController::class, 'history'])->name('history');
+        Route::get('/detail/{donor}', [DonorController::class, 'detail'])->name('detail');
+        Route::get('/certificate/{donor}', [DonorController::class, 'certificate'])->name('certificate');
+        
+        // Additional donor routes
+        Route::get('/schedule', [DonorController::class, 'schedule'])->name('schedule');
+        Route::post('/reschedule/{donor}', [DonorController::class, 'reschedule'])->name('reschedule');
+    });
+    
+    // USER EVENT ROUTES (for authenticated users)
+    Route::prefix('my-events')->name('my-events.')->group(function () {
+        Route::get('/', [EventController::class, 'myEvents'])->name('index');
+        Route::post('/{event}/join', [EventController::class, 'joinEvent'])->name('join');
+        Route::delete('/{event}/leave', [EventController::class, 'leaveEvent'])->name('leave');
+    });
+});
+
+// ========================================
+// ADMIN ROUTES (AUTH + ADMIN MIDDLEWARE)
 // ========================================
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
-    // ✅ Dashboard - LANGSUNG RETURN VIEW (TIDAK ADA REDIRECT)
+    // Admin Dashboard
     Route::get('/dashboard', function() {
         // Hitung statistik untuk dashboard
         $totalUsers = \App\Models\User::count();
+        $totalProfiles = \App\Models\Profile::count();
         $totalDonors = \App\Models\Donor::count();
         $totalEvents = \App\Models\Event::count();
         $totalLokasi = \App\Models\Lokasi::count();
         
-        return view('admin.dashboard', compact('totalUsers', 'totalDonors', 'totalEvents', 'totalLokasi'));
+        // Recent activity
+        $recentUsers = \App\Models\User::latest()->limit(5)->get();
+        $recentDonors = \App\Models\Donor::with('user')->latest()->limit(5)->get();
+        
+        // Monthly statistics
+        $monthlyStats = [
+            'users' => \App\Models\User::whereMonth('created_at', now()->month)->count(),
+            'donors' => \App\Models\Donor::whereMonth('created_at', now()->month)->count(),
+            'events' => \App\Models\Event::whereMonth('created_at', now()->month)->count(),
+        ];
+        
+        return view('admin.dashboard', compact(
+            'totalUsers', 
+            'totalProfiles', 
+            'totalDonors', 
+            'totalEvents', 
+            'totalLokasi',
+            'recentUsers',
+            'recentDonors',
+            'monthlyStats'
+        ));
     })->name('dashboard');
+    
+    // User Management
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('index');
+        Route::get('/{id}/show', [ProfileController::class, 'show_admin'])->name('show');
+        Route::get('/{id}/edit', [ProfileController::class, 'edit_admin'])->name('edit');
+        Route::put('/{id}', [ProfileController::class, 'update_admin'])->name('update');
+        Route::delete('/{id}', [ProfileController::class, 'destroy'])->name('destroy');
+        Route::get('/export', [ProfileController::class, 'export'])->name('export');
+        
+        // Bulk actions
+        Route::post('/bulk-delete', [ProfileController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/bulk-export', [ProfileController::class, 'bulkExport'])->name('bulk-export');
+    });
     
     // DONOR MANAGEMENT
     Route::prefix('donors')->name('donors.')->group(function () {
         Route::get('/', [DonorController::class, 'adminIndex'])->name('index');
-        Route::get('/export/data', [DonorController::class, 'adminExport'])->name('export');
+        Route::get('/export', [DonorController::class, 'adminExport'])->name('export');
+        Route::get('/statistics', [DonorController::class, 'adminStatistics'])->name('statistics');
         Route::get('/{donor}', [DonorController::class, 'adminShow'])->name('show');
+        Route::get('/{donor}/edit', [DonorController::class, 'adminEdit'])->name('edit');
+        Route::put('/{donor}', [DonorController::class, 'adminUpdate'])->name('update');
         Route::put('/{donor}/status', [DonorController::class, 'adminUpdateStatus'])->name('updateStatus');
         Route::post('/{donor}/complete', [DonorController::class, 'adminComplete'])->name('complete');
+        Route::post('/{donor}/approve', [DonorController::class, 'adminApprove'])->name('approve');
+        Route::post('/{donor}/reject', [DonorController::class, 'adminReject'])->name('reject');
+        Route::delete('/{donor}', [DonorController::class, 'adminDestroy'])->name('destroy');
+        
+        // Bulk actions for donors
+        Route::post('/bulk-approve', [DonorController::class, 'bulkApprove'])->name('bulk-approve');
+        Route::post('/bulk-reject', [DonorController::class, 'bulkReject'])->name('bulk-reject');
     });
     
     // EVENTS MANAGEMENT
-    Route::resource('events', AdminEventController::class);
-    Route::post('events/{event}/approve', [AdminEventController::class, 'approve'])->name('events.approve');
-    Route::post('events/{event}/reject', [AdminEventController::class, 'reject'])->name('events.reject');
+    Route::prefix('events')->name('events.')->group(function () {
+        Route::get('/', [AdminEventController::class, 'index'])->name('index');
+        Route::get('/create', [AdminEventController::class, 'create'])->name('create');
+        Route::post('/', [AdminEventController::class, 'store'])->name('store');
+        Route::get('/{event}', [AdminEventController::class, 'show'])->name('show');
+        Route::get('/{event}/edit', [AdminEventController::class, 'edit'])->name('edit');
+        Route::put('/{event}', [AdminEventController::class, 'update'])->name('update');
+        Route::delete('/{event}', [AdminEventController::class, 'destroy'])->name('destroy');
+        
+        // Event status management
+        Route::post('/{event}/approve', [AdminEventController::class, 'approve'])->name('approve');
+        Route::post('/{event}/reject', [AdminEventController::class, 'reject'])->name('reject');
+        Route::post('/{event}/publish', [AdminEventController::class, 'publish'])->name('publish');
+        Route::post('/{event}/unpublish', [AdminEventController::class, 'unpublish'])->name('unpublish');
+        
+        // Event participants
+        Route::get('/{event}/participants', [AdminEventController::class, 'participants'])->name('participants');
+        Route::post('/{event}/participants/export', [AdminEventController::class, 'exportParticipants'])->name('participants.export');
+    });
     
     // LOKASI MANAGEMENT
     Route::prefix('lokasis')->name('lokasis.')->group(function () {
         Route::get('/', [LokasiController::class, 'index'])->name('index');
         Route::get('/create', [LokasiController::class, 'create'])->name('create');
         Route::post('/', [LokasiController::class, 'store'])->name('store');
+        Route::get('/{lokasi}', [LokasiController::class, 'show'])->name('show');
         Route::get('/{lokasi}/edit', [LokasiController::class, 'edit'])->name('edit');
         Route::put('/{lokasi}', [LokasiController::class, 'update'])->name('update');
         Route::delete('/{lokasi}', [LokasiController::class, 'destroy'])->name('destroy');
+        
+        // Lokasi status management
+        Route::post('/{lokasi}/activate', [LokasiController::class, 'activate'])->name('activate');
+        Route::post('/{lokasi}/deactivate', [LokasiController::class, 'deactivate'])->name('deactivate');
+        
+        // Lokasi statistics
+        Route::get('/{lokasi}/statistics', [LokasiController::class, 'statistics'])->name('statistics');
     });
     
     // ARTICLES MANAGEMENT
@@ -157,7 +297,104 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{article}/edit', [ArticleController::class, 'edit'])->name('edit');
         Route::put('/{article}', [ArticleController::class, 'update'])->name('update');
         Route::delete('/{article}', [ArticleController::class, 'destroy'])->name('destroy');
+        
+        // Article status management
         Route::patch('/{article}/toggle-status', [ArticleController::class, 'toggleStatus'])->name('toggle-status');
         Route::patch('/{article}/toggle-featured', [ArticleController::class, 'toggleFeatured'])->name('toggle-featured');
+        Route::post('/{article}/publish', [ArticleController::class, 'publish'])->name('publish');
+        Route::post('/{article}/unpublish', [ArticleController::class, 'unpublish'])->name('unpublish');
+        
+        // Bulk actions for articles
+        Route::post('/bulk-publish', [ArticleController::class, 'bulkPublish'])->name('bulk-publish');
+        Route::post('/bulk-unpublish', [ArticleController::class, 'bulkUnpublish'])->name('bulk-unpublish');
+        Route::post('/bulk-delete', [ArticleController::class, 'bulkDelete'])->name('bulk-delete');
+    });
+    
+    // SYSTEM MANAGEMENT
+    Route::prefix('system')->name('system.')->group(function () {
+        // Settings
+        Route::get('/settings', function() {
+            return view('admin.system.settings');
+        })->name('settings');
+        
+        // Logs
+        Route::get('/logs', function() {
+            return view('admin.system.logs');
+        })->name('logs');
+        
+        // Backup
+        Route::get('/backup', function() {
+            return view('admin.system.backup');
+        })->name('backup');
+        Route::post('/backup/create', function() {
+            // Backup logic here
+            return redirect()->back()->with('success', 'Backup berhasil dibuat');
+        })->name('backup.create');
+        
+        // Cache management
+        Route::post('/cache/clear', function() {
+            \Artisan::call('cache:clear');
+            \Artisan::call('config:clear');
+            \Artisan::call('view:clear');
+            \Artisan::call('route:clear');
+            
+            return redirect()->back()->with('success', 'Cache berhasil dibersihkan');
+        })->name('cache.clear');
+    });
+    
+    // REPORTS
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', function() {
+            return view('admin.reports.index');
+        })->name('index');
+        
+        Route::get('/users', [ProfileController::class, 'userReport'])->name('users');
+        Route::get('/donors', [DonorController::class, 'donorReport'])->name('donors');
+        Route::get('/events', [AdminEventController::class, 'eventReport'])->name('events');
+        Route::get('/locations', [LokasiController::class, 'locationReport'])->name('locations');
+        
+        // Export reports
+        Route::post('/export/users', [ProfileController::class, 'exportUserReport'])->name('export.users');
+        Route::post('/export/donors', [DonorController::class, 'exportDonorReport'])->name('export.donors');
+        Route::post('/export/events', [AdminEventController::class, 'exportEventReport'])->name('export.events');
     });
 });
+
+// ========================================
+// API ROUTES (for AJAX calls)
+// ========================================
+Route::prefix('ajax')->name('ajax.')->middleware('auth')->group(function () {
+    // Profile related
+    Route::get('/profile/{id}', [ProfileController::class, 'getProfile'])->name('profile.get');
+    
+    // Location related
+    Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
+    Route::get('/cities/{province}', [DependentDropdownController::class, 'cities'])->name('cities');
+    Route::get('/districts/{city}', [DependentDropdownController::class, 'districts'])->name('districts');
+    Route::get('/villages/{district}', [DependentDropdownController::class, 'villages'])->name('villages');
+    
+    // Search
+    Route::get('/search/users', [ProfileController::class, 'searchUsers'])->name('search.users');
+    Route::get('/search/donors', [DonorController::class, 'searchDonors'])->name('search.donors');
+    Route::get('/search/events', [EventController::class, 'searchEvents'])->name('search.events');
+});
+
+// ========================================
+// FALLBACK ROUTES
+// ========================================
+
+// Handle 404 errors
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});
+
+// Development routes (only in local environment)
+if (app()->environment('local')) {
+    Route::get('/test-email', function() {
+        return view('emails.test');
+    })->name('test.email');
+    
+    Route::get('/phpinfo', function() {
+        return phpinfo();
+    })->name('phpinfo');
+}

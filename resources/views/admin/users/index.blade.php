@@ -1,6 +1,6 @@
 @extends('dashboardlayout.app')
 
-@section('title', 'Dashboard - Your App')
+@section('title', 'Dashboard - Redwave')
 @section('page-title', 'Manajemen Data User')
 
 @section('content')
@@ -86,7 +86,6 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Umur</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -143,20 +142,6 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-4 py-4 whitespace-nowrap text-center">
-                                <div class="flex items-center justify-center space-x-2">
-                                    <button onclick="viewUser({{ $profile->id }}, '{{ $profile->name }}')" 
-                                            class="text-blue-600 hover:text-blue-800 transition-colors p-1" 
-                                            title="Lihat Detail">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button onclick="deleteUser({{ $profile->id }}, '{{ $profile->name }}')" 
-                                            class="text-red-600 hover:text-red-800 transition-colors p-1" 
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
                         </tr>
                         @empty
                         <tr id="emptyState">
@@ -177,23 +162,6 @@
         <!-- Info Footer -->
         <div class="mt-6 text-center text-sm text-gray-500">
             <p>Data terakhir diperbarui: {{ now()->format('d/m/Y H:i') }}</p>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Detail User -->
-<div id="userModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div class="flex items-center justify-between p-6 border-b">
-                <h3 class="text-lg font-medium text-gray-900">Detail User</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-6" id="modalContent">
-                <!-- Content will be loaded here -->
-            </div>
         </div>
     </div>
 </div>
@@ -224,25 +192,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (matchesSearch && matchesBlood) {
                 row.style.display = '';
                 visibleCount++;
-                // Update row number
                 row.cells[0].querySelector('span').textContent = visibleCount;
             } else {
                 row.style.display = 'none';
             }
         });
 
-        // Show/hide empty state
         const emptyState = document.getElementById('emptyState');
         if (emptyState) {
             emptyState.style.display = (visibleCount === 0 && dataRows.length > 0) ? '' : 'none';
         }
     }
 
-    // Event listeners
     searchInput.addEventListener('input', performSearch);
     bloodFilter.addEventListener('change', performSearch);
 
-    // Clear search on Escape
     searchInput.addEventListener('keyup', function(e) {
         if (e.key === 'Escape') {
             this.value = '';
@@ -251,141 +215,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// User actions
-function viewUser(id, name) {
-    const modalContent = document.getElementById('modalContent');
-    
-    // Simple user detail display
-    modalContent.innerHTML = `
-        <div class="space-y-4">
-            <div class="text-center">
-                <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span class="text-white font-bold text-xl">${name.charAt(0).toUpperCase()}</span>
-                </div>
-                <h4 class="text-lg font-medium text-gray-900">${name}</h4>
-                <p class="text-sm text-gray-500">User ID: ${id}</p>
-            </div>
-            <div class="border-t pt-4">
-                <p class="text-sm text-gray-600 text-center">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    Detail lengkap dapat dilihat di halaman edit
-                </p>
-            </div>
-            <div class="flex space-x-3">
-                <button onclick="editUser(${id})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                    <i class="fas fa-edit mr-2"></i>
-                    Edit Data
-                </button>
-                <button onclick="closeModal()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                    Tutup
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('userModal').classList.remove('hidden');
-}
-
-function editUser(id) {
-    window.location.href = `/profiles/${id}/edit`;
-}
-
-function deleteUser(id, name) {
-    if (confirm(`Yakin ingin menghapus data ${name}?`)) {
-        // Create and submit delete form
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/profiles/${id}`;
-        form.style.display = 'none';
-        
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = '{{ csrf_token() }}';
-        form.appendChild(csrfInput);
-        
-        const methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'DELETE';
-        form.appendChild(methodInput);
-        
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-function closeModal() {
-    document.getElementById('userModal').classList.add('hidden');
-}
-
-// Export to Excel (CSV format)
+// Export Excel function
 function exportToExcel() {
-    // Show loading
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengexport...';
-    button.disabled = true;
-    
-    // Get visible rows only
     const table = document.getElementById('userTable');
-    const visibleRows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
+    const rows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
     
-    // CSV headers
-    let csvContent = 'No,Nama,ID,Golongan Darah,Rhesus,Jenis Kelamin,Telepon,Umur,Status\n';
+    let csvContent = 'No,Nama,Golongan Darah,Rhesus,Gender,Telepon,Umur,Status\n';
     
-    // Add data rows
-    visibleRows.forEach(row => {
-        if (row.cells.length > 1) { // Skip empty state row
-            const cols = row.cells;
-            const rowData = [
-                cols[0].textContent.trim(), // No
-                cols[1].querySelector('.user-name').textContent.trim(), // Nama
-                cols[1].querySelector('.text-gray-500').textContent.replace('ID: ', '').trim(), // ID
-                cols[2].textContent.trim(), // Golongan Darah
-                cols[3].textContent.trim(), // Rhesus
-                cols[4].textContent.includes('fa-mars') ? 'Laki-laki' : 'Perempuan', // Gender
-                cols[5].textContent.trim(), // Telepon
-                cols[6].textContent.trim(), // Umur
-                cols[7].textContent.includes('Donor') ? 'Donor Aktif' : 'User Biasa' // Status
-            ];
+    rows.forEach(row => {
+        if (row.cells.length > 1) {
+            const name = row.querySelector('.user-name').textContent;
+            const blood = row.cells[2].textContent.trim();
+            const rhesus = row.cells[3].textContent.trim();
+            const gender = row.cells[4].textContent.includes('fa-mars') ? 'Laki-laki' : 'Perempuan';
+            const phone = row.querySelector('.user-phone').textContent;
+            const age = row.cells[6].textContent.trim();
+            const status = row.cells[7].textContent.includes('Donor') ? 'Donor' : 'User';
+            const no = row.cells[0].textContent.trim();
             
-            // Escape quotes and wrap in quotes
-            const escapedData = rowData.map(field => `"${field.replace(/"/g, '""')}"`);
-            csvContent += escapedData.join(',') + '\n';
+            csvContent += `${no},"${name}","${blood}","${rhesus}","${gender}","${phone}","${age}","${status}"\n`;
         }
     });
     
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    const fileName = `data_user_${new Date().toISOString().split('T')[0]}.csv`;
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'data_user.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     
-    link.setAttribute('href', url);
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Reset button
-    setTimeout(() => {
-        button.innerHTML = originalText;
-        button.disabled = false;
-    }, 1500);
-    
-    // Show success message
-    setTimeout(() => {
-        alert(`File ${fileName} berhasil didownload!`);
-    }, 500);
+    alert('File berhasil didownload!');
 }
-
-// Close modal when clicking outside
-document.getElementById('userModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
-    }
-});
 </script>
 
 @endsection

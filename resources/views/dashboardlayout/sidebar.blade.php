@@ -16,9 +16,9 @@
             <!-- Menu khusus untuk Admin -->
             @if(Auth::check() && Auth::user()->role === 'admin')
                 <li>
-                    <a href="{{ route('profiles.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('users.*') ? 'bg-red-700' : '' }}">
+                    <a href="{{ route('admin.users.index') }}" class="flex items-center px-4 py-3 text-white hover:bg-red-700 rounded-lg transition-colors {{ request()->routeIs('users.*') ? 'bg-red-700' : '' }}">
                         <i class="fas fa-users mr-3"></i>
-                        Users
+                        Data Users
                     </a>
                 </li>
 

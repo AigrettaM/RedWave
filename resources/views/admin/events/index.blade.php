@@ -343,7 +343,7 @@
                             @endif
 
                             @if($event->status === 'approved')
-                                <a href="{{ route('events.show', $event) }}" 
+                                <a href="{{ route('admin.events.show', $event) }}" 
                                    target="_blank"
                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                                     <i class="fas fa-external-link-alt mr-2"></i>

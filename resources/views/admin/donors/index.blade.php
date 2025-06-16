@@ -16,11 +16,11 @@
                     <p class="text-gray-600">Kelola semua data donor darah dan proses persetujuan</p>
                 </div>
                 <div class="mt-4 md:mt-0 flex gap-2">
-                    <a href="{{ route('admin.donors.export') }}" 
+                    <button onclick="exportToExcel()" 
                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center">
                         <i class="fas fa-download mr-2"></i>
                         Export Excel
-                    </a>
+                    </button>
                     <button onclick="refreshData()" 
                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                         <i class="fas fa-sync-alt mr-2"></i>
@@ -168,7 +168,7 @@
             </div>
             
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="min-w-full divide-y divide-gray-200" id="donorsTable">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -205,10 +205,10 @@
                                             </div>
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">
+                                            <div class="text-sm font-medium text-gray-900 donor-name">
                                                 {{ $donor->user->name }}
                                             </div>
-                                            <div class="text-sm text-gray-500">
+                                            <div class="text-sm text-gray-500 donor-code">
                                                 {{ $donor->donor_code }}
                                             </div>
                                         </div>
@@ -217,7 +217,7 @@
 
                                 <!-- Status -->
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full donor-status
                                         @if($donor->status === 'completed') bg-green-100 text-green-800
                                         @elseif($donor->status === 'approved') bg-blue-100 text-blue-800
                                         @elseif($donor->status === 'pending') bg-yellow-100 text-yellow-800
@@ -235,18 +235,18 @@
                                 <!-- Eligibility -->
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if($donor->is_eligible)
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 donor-eligible">
                                             ✅ Layak
                                         </span>
                                     @else
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 donor-eligible">
                                             ❌ Tidak Layak
                                         </span>
                                     @endif
                                 </td>
 
                                 <!-- Date -->
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 donor-date">
                                     <div>{{ $donor->created_at->format('d M Y') }}</div>
                                     <div class="text-xs text-gray-500">{{ $donor->created_at->format('H:i') }}</div>
                                 </td>
@@ -293,7 +293,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
+                            <tr id="emptyState">
                                 <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                                     <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <i class="fas fa-inbox text-gray-400 text-2xl"></i>
@@ -440,11 +440,13 @@
 </div>
 
 <script>
-// Filter functionality
-document.getElementById('searchInput').addEventListener('input', filterDonors);
-document.getElementById('statusFilter').addEventListener('change', filterDonors);
-document.getElementById('eligibilityFilter').addEventListener('change', filterDonors);
-document.getElementById('dateFilter').addEventListener('change', filterDonors);
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    document.getElementById('searchInput').addEventListener('input', filterDonors);
+    document.getElementById('statusFilter').addEventListener('change', filterDonors);
+    document.getElementById('eligibilityFilter').addEventListener('change', filterDonors);
+    document.getElementById('dateFilter').addEventListener('change', filterDonors);
+});
 
 function filterDonors() {
     const search = document.getElementById('searchInput').value.toLowerCase();
@@ -453,19 +455,62 @@ function filterDonors() {
     const date = document.getElementById('dateFilter').value;
     
     const rows = document.querySelectorAll('.donor-row');
+    let visibleCount = 0;
     
     rows.forEach(row => {
-        const matchSearch = row.dataset.search.includes(search);
-        const matchStatus = !status || row.dataset.status === status;
-        const matchEligible = !eligible || row.dataset.eligible === eligible;
-        const matchDate = !date || row.dataset.date === date;
+        const matchSearch = search === '' || row.dataset.search.includes(search);
+        const matchStatus = status === '' || row.dataset.status === status;
+        const matchEligible = eligible === '' || row.dataset.eligible === eligible;
+        const matchDate = date === '' || row.dataset.date === date;
         
         if (matchSearch && matchStatus && matchEligible && matchDate) {
             row.style.display = '';
+            visibleCount++;
         } else {
             row.style.display = 'none';
         }
     });
+
+    // Show/hide empty state
+    const emptyState = document.getElementById('emptyState');
+    if (emptyState) {
+        emptyState.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+    }
+}
+
+// Export Excel function
+function exportToExcel() {
+    const table = document.getElementById('donorsTable');
+    const rows = table.querySelectorAll('tbody tr.donor-row:not([style*="display: none"])');
+    
+    if (rows.length === 0) {
+        alert('Tidak ada data untuk diekspor!');
+        return;
+    }
+    
+    let csvContent = 'Nama,Kode Donor,Status,Kelayakan,Tanggal\n';
+    
+    rows.forEach(row => {
+        const name = row.querySelector('.donor-name').textContent.trim();
+        const code = row.querySelector('.donor-code').textContent.trim();
+        const status = row.querySelector('.donor-status').textContent.trim();
+        const eligible = row.querySelector('.donor-eligible').textContent.trim();
+        const date = row.querySelector('.donor-date').textContent.trim().replace(/\s+/g, ' ');
+        
+        csvContent += `"${name}","${code}","${status}","${eligible}","${date}"\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'data_donor_' + new Date().toISOString().split('T')[0] + '.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    alert('File berhasil didownload!');
 }
 
 function viewDonor(donorId) {
@@ -512,7 +557,7 @@ function viewDonor(donorId) {
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h4 class="font-semibold text-gray-800 mb-3">Informasi Pengguna</h4>
                             <div class="space-y-2 text-sm">
-                                <div><span class="font-medium">Nama:</span> ${data.donor.user.name}</div>
+                                                                <div><span class="font-medium">Nama:</span> ${data.donor.user.name}</div>
                                 <div><span class="font-medium">Email:</span> ${data.donor.user.email}</div>
                             </div>
                         </div>
@@ -537,10 +582,6 @@ function viewDonor(donorId) {
                         </div>
                     ` : ''}
                     
-                    ${data.donor.rejection_reason ? `
-                        <div class="bg-red-50 rounded-lg p-4">
-                            <h4 class="font-semibold text-red-800 mb-2">Alasan Penolakan</h4>
-                            <p class="text-sm text-red-700">${data.donor.rejection_reason}</p>
                     ${data.donor.rejection_reason ? `
                         <div class="bg-red-50 rounded-lg p-4">
                             <h4 class="font-semibold text-red-800 mb-2">Alasan Penolakan</h4>
@@ -651,32 +692,58 @@ function updateDonorStatus(donorId, status, reason = null) {
     const data = { status: status };
     if (reason) data.rejection_reason = reason;
     
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        alert('CSRF token tidak ditemukan. Refresh halaman dan coba lagi.');
+        return;
+    }
+    
     fetch(`/admin/donors/${donorId}/status`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+            'Accept': 'application/json'
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
+            if (status === 'rejected') {
+                closeModal('rejectModal');
+                alert('Donor berhasil ditolak!');
+            } else {
+                alert('Status donor berhasil diupdate!');
+            }
             location.reload();
         } else {
-            alert('Gagal mengupdate status');
+            throw new Error(data.message || 'Unknown error');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Gagal mengupdate status: ' + error.message);
     });
 }
 
 // Close modal
 function closeModal(modalId) {
     document.getElementById(modalId).classList.add('hidden');
-}
-
-// Export data
-function exportData() {
-    window.location.href = '/admin/donors/export';
+    
+    // Reset forms
+    if (modalId === 'completeModal') {
+        document.getElementById('completeForm').reset();
+        document.getElementById('donationDate').value = '{{ date("Y-m-d") }}';
+    }
+    if (modalId === 'rejectModal') {
+        document.getElementById('rejectForm').reset();
+    }
 }
 
 // Refresh data
@@ -692,5 +759,31 @@ document.querySelectorAll('.fixed').forEach(modal => {
         }
     });
 });
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.fixed:not(.hidden)').forEach(modal => {
+            modal.classList.add('hidden');
+        });
+    }
+});
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('eligibilityFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    filterDonors();
+}
+
+// Add clear filters button functionality if needed
+document.addEventListener('keyup', function(e) {
+    if (e.target.id === 'searchInput' && e.key === 'Escape') {
+        clearFilters();
+    }
+});
 </script>
 @endsection
+

@@ -256,7 +256,7 @@
                     <h3 class="text-lg font-bold text-gray-800 mb-4">Aksi Cepat</h3>
                     <div class="space-y-3">
                         @if($event->status === 'approved')
-                        <a href="{{ route('events.show', $event) }}" 
+                        <a href="{{ route('admin.events.show', $event) }}" 
                            target="_blank"
                            class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center">
                             <i class="fas fa-external-link-alt mr-2"></i>
