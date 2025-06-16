@@ -12,7 +12,7 @@
 
     <!-- Filter dan Pencarian -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <form method="GET" action="{{ route('public.lokasi.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" action="{{ route('location.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <!-- Pencarian -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari Lokasi</label>
@@ -121,7 +121,7 @@
                         @endif
 
                         <!-- Tombol Detail -->
-                        <a href="{{ route('public.lokasi.show', $lokasi) }}" 
+                        <a href="{{ route('location.show', $lokasi) }}" 
                            class="inline-block w-full text-center bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
                             Lihat Detail
                         </a>

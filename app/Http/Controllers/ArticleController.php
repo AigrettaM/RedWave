@@ -242,7 +242,7 @@ class ArticleController extends Controller
                           ->orderBy('published_at', 'desc')
                           ->paginate(12);
         
-        return view('articles.index', compact('articles'));
+        return view('informasi.article.index', compact('articles'));
     }
 
     // Frontend: Menampilkan detail artikel

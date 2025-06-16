@@ -100,9 +100,9 @@
             <a href="{{ url('login') }}" class="bg-white text-red-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block">
                 Daftar Donor Sekarang
             </a>
-            <a href="{{ url('alur-donor') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-red-600 transition-colors inline-block">
+            {{-- <a href="{{ url('alur-donor') }}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-red-600 transition-colors inline-block">
                 Pelajari Lebih Lanjut
-            </a>
+            </a> --}}
         </div>
     </div>
 
