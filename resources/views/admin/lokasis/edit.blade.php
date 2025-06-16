@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="mb-6">
             <div class="flex items-center mb-4">
-                <a href="{{ route('lokasis.index') }}" 
+                <a href="{{ route('admin.lokasis.index') }}" 
                    class="text-gray-600 hover:text-gray-800 mr-4">
                     <i class="fas fa-arrow-left text-xl"></i>
                 </a>
@@ -25,7 +25,7 @@
                 <h2 class="text-xl font-semibold text-white">Edit Informasi Lokasi</h2>
             </div>
             
-            <form action="{{ route('lokasis.update', $lokasi->id) }}" method="POST" class="p-6" enctype="multipart/form-data">
+            <form action="{{ route('admin.lokasis.update', $lokasi->id) }}" method="POST" class="p-6" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 
@@ -338,7 +338,7 @@
 
                 <!-- Form Actions -->
                 <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                    <a href="{{ route('lokasis.index') }}" 
+                    <a href="{{ route('admin.lokasis.index') }}" 
                        class="px-6 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
                         <i class="fas fa-times mr-2"></i>
                         Batal

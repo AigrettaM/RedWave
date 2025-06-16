@@ -41,7 +41,7 @@ class HomeController extends Controller
   {
       // Pastikan hanya user biasa yang bisa akses
       if (Auth::user()->role === 'admin' || Auth::user()->is_admin == 1) {
-          return redirect()->route('user.home');
+          return redirect()->route('admin.dashboard'); // ✅ FIX: redirect ke admin dashboard, bukan user.home
       }
 
       // Mendapatkan data analytics yang menggabungkan stok dan statistik donor
@@ -77,7 +77,7 @@ class HomeController extends Controller
   {
       // Pastikan hanya admin yang bisa akses
       if (Auth::user()->role !== 'admin' && Auth::user()->is_admin != 1) {
-          return redirect()->route('admin.dashboard');
+          return redirect()->route('user.home'); // ✅ FIX: redirect ke user.home, bukan admin.dashboard
       }
 
       // Dashboard statistics untuk blood bank administrators

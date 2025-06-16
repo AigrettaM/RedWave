@@ -14,26 +14,29 @@ class Article extends Model
         'slug',
         'excerpt',
         'content',
-        'category',
         'featured_image',
-        'author_name',
+        'author',
         'author_title',
         'author_avatar',
-        'is_published',
+        'status',
         'is_featured',
-        'published_at'
+        'category',
+        'published_at',
+        'tags',
+        'views'
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
-        'is_published' => 'boolean',
         'is_featured' => 'boolean',
+        'tags' => 'array', // Cast JSON to array
+        'views' => 'integer'
     ];
 
     // Scope untuk artikel yang sudah dipublish
     public function scopePublished($query)
     {
-        return $query->where('is_published', true);
+        return $query->where('status', 'published');
     }
 
     // Scope untuk artikel featured
@@ -57,5 +60,17 @@ class Article extends Model
     public function getAuthorAvatarUrlAttribute()
     {
         return $this->author_avatar ? asset('storage/' . $this->author_avatar) : null;
+    }
+
+    // Accessor untuk tags sebagai string (untuk form input)
+    public function getTagsStringAttribute()
+    {
+        return $this->tags ? implode(', ', $this->tags) : '';
+    }
+
+    // Check if article is published
+    public function getIsPublishedAttribute()
+    {
+        return $this->status === 'published';
     }
 }

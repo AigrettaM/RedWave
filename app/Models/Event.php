@@ -261,4 +261,36 @@ class Event extends Model
         
         return $hour >= 0 && $hour <= 23 && $minute >= 0 && $minute <= 59;
     }
+    // app/Models/Event.php
+public function getBackgroundColorAttribute()
+{
+    if ($this->image) {
+        return null; // Ada gambar, tidak perlu warna
+    }
+    
+    // Generate warna berdasarkan hash dari title
+    $colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+        '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+        '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2'
+    ];
+    
+    $index = crc32($this->title) % count($colors);
+    return $colors[abs($index)];
+}
+
+public function getInitialsAttribute()
+{
+    $words = explode(' ', $this->title);
+    $initials = '';
+    
+    foreach ($words as $word) {
+        if (strlen($initials) < 2 && !empty($word)) {
+            $initials .= strtoupper(substr($word, 0, 1));
+        }
+    }
+    
+    return strlen($initials) > 0 ? $initials : 'EV';
+}
+
 }

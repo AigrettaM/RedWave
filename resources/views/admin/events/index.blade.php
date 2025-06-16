@@ -173,61 +173,66 @@
                  data-title="{{ strtolower($event->title) }}"
                  data-location="{{ strtolower($event->location) }}">
                 <div class="md:flex">
-                    <!-- Event Image -->
-                    <div class="md:w-48 md:flex-shrink-0 relative">
-                        @if($event->image)
-                            @php
-                                $imagePath = 'storage/events/' . $event->image;
-                                $fullPath = public_path($imagePath);
-                                $imageExists = file_exists($fullPath);
-                            @endphp
-                            
-                            @if($imageExists)
-                                <img class="h-48 w-full object-cover md:h-full md:w-48" 
-                                     src="{{ asset($imagePath) }}" 
-                                     alt="{{ $event->title }}"
-                                     loading="lazy">
-                            @else
-                                <div class="h-48 w-full md:h-full md:w-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                                    <div class="text-center">
-                                        <i class="fas fa-image text-gray-400 text-4xl mb-2"></i>
-                                        <p class="text-gray-500 text-sm font-medium">Gambar Tidak Ditemukan</p>
-                                    </div>
-                                </div>
-                            @endif
-                        @else
-                            <div class="h-48 w-full md:h-full md:w-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                                <div class="text-center">
-                                    <i class="fas fa-calendar-alt text-gray-400 text-4xl mb-2"></i>
-                                    <p class="text-gray-500 text-sm font-medium">No Image</p>
-                                </div>
-                            </div>
-                        @endif
-                        
-                        <!-- Status Overlay -->
-                        <div class="absolute top-2 left-2">
-                            @switch($event->status)
-                                @case('pending')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        <i class="fas fa-clock mr-1"></i>
-                                        Pending
-                                    </span>
-                                    @break
-                                @case('approved')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-check mr-1"></i>
-                                        Approved
-                                    </span>
-                                    @break
-                                @case('rejected')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        <i class="fas fa-times mr-1"></i>
-                                        Rejected
-                                    </span>
-                                    @break
-                            @endswitch
-                        </div>
-                    </div>
+<!-- Event Image -->
+<div class="md:w-48 md:flex-shrink-0 relative">
+    @if($event->image)
+        @php
+            $imagePath = 'storage/events/' . $event->image;
+            $fullPath = public_path($imagePath);
+            $imageExists = file_exists($fullPath);
+        @endphp
+        
+        @if($imageExists)
+            <img class="h-48 w-full object-cover md:h-full md:w-48" 
+                 src="{{ asset($imagePath) }}" 
+                 alt="{{ $event->title }}"
+                 loading="lazy">
+        @else
+            <!-- Fallback ke warna -->
+            <div class="h-48 w-full md:h-full md:w-48 flex items-center justify-center text-white"
+                 style="background: linear-gradient(135deg, {{ $event->background_color }}, {{ $event->background_color }}dd);">
+                <div class="text-center">
+                    <div class="text-3xl font-bold mb-2">{{ $event->initials }}</div>
+                    <p class="text-sm font-medium opacity-90">{{ Str::limit($event->title, 20) }}</p>
+                </div>
+            </div>
+        @endif
+    @else
+        <!-- Tidak ada gambar, gunakan warna -->
+        <div class="h-48 w-full md:h-full md:w-48 flex items-center justify-center text-white"
+             style="background: linear-gradient(135deg, {{ $event->background_color }}, {{ $event->background_color }}dd);">
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ $event->initials }}</div>
+                <p class="text-sm font-medium opacity-90">{{ Str::limit($event->title, 20) }}</p>
+            </div>
+        </div>
+    @endif
+    
+    <!-- Status Overlay tetap sama -->
+    <div class="absolute top-2 left-2">
+        @switch($event->status)
+            @case('pending')
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <i class="fas fa-clock mr-1"></i>
+                    Pending
+                </span>
+                @break
+            @case('approved')
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i class="fas fa-check mr-1"></i>
+                    Approved
+                </span>
+                @break
+            @case('rejected')
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <i class="fas fa-times mr-1"></i>
+                    Rejected
+                </span>
+                @break
+        @endswitch
+    </div>
+</div>
+
 
                     <!-- Event Content -->
                     <div class="p-6 flex-1">

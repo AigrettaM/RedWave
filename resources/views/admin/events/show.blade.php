@@ -69,13 +69,25 @@
             <!-- Main Content -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Event Image -->
-                @if($event->image)
-                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <img src="{{ asset('storage/events/' . $event->image) }}" 
-                         alt="{{ $event->title }}" 
-                         class="w-full h-64 object-cover">
-                </div>
-                @endif
+<!-- Event Image di show.blade.php -->
+@if($event->image)
+<div class="rounded-lg overflow-hidden shadow-lg">
+    <img src="{{ asset('storage/events/' . $event->image) }}" 
+         alt="{{ $event->title }}" 
+         class="w-full h-64 md:h-96 object-cover">
+</div>
+@else
+<div class="rounded-lg overflow-hidden shadow-lg">
+    <div class="w-full h-64 md:h-96 flex items-center justify-center text-white"
+         style="background: linear-gradient(135deg, {{ $event->background_color }}, {{ $event->background_color }}dd);">
+        <div class="text-center">
+            <div class="text-6xl md:text-8xl font-bold mb-4">{{ $event->initials }}</div>
+            <p class="text-xl md:text-2xl font-medium opacity-90 px-8">{{ $event->title }}</p>
+        </div>
+    </div>
+</div>
+@endif
+
 
                 <!-- Event Description -->
                 <div class="bg-white rounded-lg shadow-md p-6">

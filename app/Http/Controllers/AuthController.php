@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class AuthController extends Controller
 {
     public function register(){
-        return view("auth/register");
+        return view("auth.register"); // Gunakan dot notation
     }
 
     public function registerPost(Request $request){
@@ -29,11 +29,14 @@ class AuthController extends Controller
 
         $user->save();
 
-        return back()->with('success', 'Register successfully');
+        // Auto login setelah register
+        Auth::login($user);
+        
+        return redirect()->route('user.home')->with('success', 'Registrasi berhasil! Selamat datang.');
     }
 
     public function login(){
-        return view('auth/login');
+        return view('auth.login'); // Gunakan dot notation
     }
 
     public function loginPost(Request $request){
@@ -48,21 +51,31 @@ class AuthController extends Controller
         ];
 
         if (Auth::attempt($credentials)) {
+            $request->session()->regenerate(); // Security: regenerate session
+            
             $user = Auth::user();
             
-            // ✅ PERBAIKAN: Redirect berdasarkan role
-            if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard')->with('success', 'Login Berhasil - Selamat datang Admin!');
+            // Redirect berdasarkan role dengan pengecekan yang lebih robust
+            if ($user->role === 'admin' || (isset($user->is_admin) && $user->is_admin == 1)) {
+                return redirect()->intended(route('admin.dashboard'))
+                    ->with('success', 'Login Berhasil - Selamat datang Admin!');
             } else {
-                return redirect()->route('dashboard')->with('success', 'Login Berhasil');
+                return redirect()->intended(route('user.home'))
+                    ->with('success', 'Login Berhasil');
             }
         }
         
-        return back()->with('error', 'Email or Password salah');
+        return back()
+            ->withErrors(['email' => 'Email atau password salah.'])
+            ->withInput($request->only('email'));
     }
 
-    public function logout(){
+    public function logout(Request $request){
         Auth::logout();
-        return redirect()->route('login');
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        return redirect()->route('welcome')->with('success', 'Logout berhasil');
     }
 }

@@ -388,7 +388,7 @@
                           <span class="text-sm font-medium">Edit Profile</span>
                       </a>
                   @endif
-                  <a href="#" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <a href="/contact" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <i class="fas fa-question-circle text-gray-600 mr-3"></i>
                       <span class="text-sm font-medium">Bantuan</span>
                   </a>

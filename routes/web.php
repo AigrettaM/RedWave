@@ -379,22 +379,3 @@ Route::prefix('ajax')->name('ajax.')->middleware('auth')->group(function () {
     Route::get('/search/events', [EventController::class, 'searchEvents'])->name('search.events');
 });
 
-// ========================================
-// FALLBACK ROUTES
-// ========================================
-
-// Handle 404 errors
-Route::fallback(function () {
-    return response()->view('errors.404', [], 404);
-});
-
-// Development routes (only in local environment)
-if (app()->environment('local')) {
-    Route::get('/test-email', function() {
-        return view('emails.test');
-    })->name('test.email');
-    
-    Route::get('/phpinfo', function() {
-        return phpinfo();
-    })->name('phpinfo');
-}

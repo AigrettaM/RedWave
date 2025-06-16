@@ -3,7 +3,7 @@
 @section('title', 'Lokasi Donor Darah')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-20">
     <!-- Header -->
     <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-gray-800 mb-4">Lokasi Donor Darah</h1>

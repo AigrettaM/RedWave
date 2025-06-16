@@ -74,4 +74,23 @@ class User extends Authenticatable
     {
         return $this->hasOne(Profile::class);
     }
+
+    // In App\Models\User.php
+public function donors()
+{
+    // Example relationships - choose the appropriate one:
+    
+    // If User has many donors
+    return $this->hasMany(Donor::class);
+    
+    // If User belongs to many donors (many-to-many)
+    return $this->belongsToMany(Donor::class);
+    
+    // If User has one donor
+    return $this->hasOne(Donor::class);
+    
+    // If User belongs to a donor
+    return $this->belongsTo(Donor::class);
+}
+
 }

@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             LokasiSeeder::class,
             BloodStockSeeder::class,
             DonationSeeder::class,
+            ArticleSeeder::class,
         ]);
     }
 }

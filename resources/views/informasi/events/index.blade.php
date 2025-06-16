@@ -28,7 +28,7 @@
                 </span>
             </div>
             
-            <a href="{{ route('events.create') }}" 
+            <a href="{{ route('informasi.events.create') }}" 
                class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-flex items-center shadow-lg hover:shadow-xl">
                 <i class="fas fa-plus mr-2"></i>
                 Ajukan Event
@@ -50,34 +50,34 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($events as $event)
                     <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                        <!-- Event Image -->
-                        <div class="relative h-48 overflow-hidden">
-                            @if($event->image)
-                                @if(str_starts_with($event->image, '#'))
-                                    <div class="w-full h-full" style="background-color: {{ $event->image }}"></div>
-                                @else
-                                    <img src="{{ asset('storage/events/' . $event->image) }}" 
-                                         alt="{{ $event->title }}" 
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                @endif
-                            @else
-                                <div class="w-full h-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                                    <i class="fas fa-calendar-alt text-white text-4xl"></i>
-                                </div>
-                            @endif
-                            
-                            <!-- Date Badge -->
-                            <div class="absolute top-4 left-4 bg-white rounded-lg px-3 py-2 shadow-lg">
-                                <div class="text-center">
-                                    <div class="text-red-600 font-bold text-lg">
-                                        {{ \Carbon\Carbon::parse($event->event_date)->format('d') }}
-                                    </div>
-                                    <div class="text-gray-600 text-xs uppercase">
-                                        {{ \Carbon\Carbon::parse($event->event_date)->format('M') }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+<!-- Event Image -->
+<div class="relative h-48 overflow-hidden">
+    @if($event->image)
+        <img src="{{ asset('storage/events/' . $event->image) }}" 
+             alt="{{ $event->title }}" 
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+    @else
+        <!-- Gunakan warna sebagai background -->
+        <div class="w-full h-full flex items-center justify-center text-white group-hover:scale-105 transition-transform duration-300"
+             style="background: linear-gradient(135deg, {{ $event->background_color }}, {{ $event->background_color }}dd);">
+            <div class="text-center">
+                <div class="text-4xl font-bold mb-2">{{ $event->initials }}</div>
+                <p class="text-sm font-medium opacity-90 px-4">{{ Str::limit($event->title, 30) }}</p>
+            </div>
+        </div>
+    @endif
+    
+    <!-- Event Date Overlay -->
+    <div class="absolute top-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-2 text-center shadow-lg">
+        <div class="text-xs font-medium text-gray-600 uppercase">
+            {{ \Carbon\Carbon::parse($event->event_date)->format('M') }}
+        </div>
+        <div class="text-lg font-bold text-gray-800">
+            {{ \Carbon\Carbon::parse($event->event_date)->format('d') }}
+        </div>
+    </div>
+</div>
+
 
                         <!-- Event Content -->
                         <div class="p-6">
@@ -120,7 +120,7 @@
                             </div>
 
                             <!-- Action Button -->
-                            <a href="{{ route('events.show', $event) }}" 
+                            <a href="{{ route('informasi.events.show', $event) }}" 
                                class="block w-full bg-red-600 hover:bg-red-700 text-white text-center py-3 rounded-lg font-medium transition-colors">
                                 Lihat Detail
                             </a>
