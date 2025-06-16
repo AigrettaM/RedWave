@@ -64,23 +64,13 @@ Route::prefix('informasi')->name('informasi.')->group(function () {
     });
 });
 
-// ========================================
-// PUBLIC API ROUTES
-// ========================================
 
-// Public API Routes for Dependent Dropdowns
-Route::prefix('api')->name('api.')->group(function () {
-    Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
-    Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
-    Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
-    Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
-});
 
 // Legacy support for old dropdown routes
-Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces.legacy');
-Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities.legacy');
-Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts.legacy');
-Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages.legacy');
+Route::get('/provinces', [DependentDropdownController::class, 'provinces'])->name('provinces');
+Route::get('/cities', [DependentDropdownController::class, 'cities'])->name('cities');
+Route::get('/districts', [DependentDropdownController::class, 'districts'])->name('districts');
+Route::get('/villages', [DependentDropdownController::class, 'villages'])->name('villages');
 
 // ========================================
 // BOTMAN ROUTES
