@@ -1,7 +1,7 @@
 {{-- resources/views/informasi/events/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Events - HMTI UNKHAIR')
+@section('title', 'Events Redwave')
 
 @section('content')
 <div class="min-h-screen bg-gray-50">

@@ -1,7 +1,7 @@
 {{-- resources/views/informasi/events/show.blade.php --}}
 @extends('layouts.app')
 
-@section('title', $event->title . ' - PMI Kota Bandung')
+@section('title', $event->title . 'Redwave')
 
 @section('content')
 <!-- Breadcrumb -->
@@ -18,7 +18,7 @@
                 <li>
                     <div class="flex items-center">
                         <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-                        <a href="{{ route('events.index') }}" class="text-sm font-medium text-gray-700 hover:text-red-600">Event</a>
+                        <a href="{{ route('informasi.events.index') }}" class="text-sm font-medium text-gray-700 hover:text-red-600">Event</a>
                     </div>
                 </li>
                 <li aria-current="page">
@@ -202,7 +202,7 @@
                             </a>
                             @endif
                             
-                            <a href="{{ route('events.index') }}" 
+                            <a href="{{ route('informasi.events.index') }}" 
                                class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center">
                                 <i class="fas fa-arrow-left mr-2"></i>
                                 Kembali ke Event
@@ -235,7 +235,7 @@
                                         {{ Str::limit($relatedEvent->location, 25) }}
                                     </div>
                                 </div>
-                                <a href="{{ route('events.show', $relatedEvent) }}" 
+                                <a href="{{ route('informasi.events.show', $relatedEvent) }}" 
                                    class="text-red-600 hover:text-red-700 text-sm font-medium">
                                     Lihat Detail →
                                 </a>

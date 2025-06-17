@@ -129,7 +129,7 @@ class EventController extends Controller
                 'status' => $event->status
             ]);
 
-            return redirect()->route('events.index')
+            return redirect()->route('informasi.events.index')
                 ->with('success', 'Event berhasil diajukan! Tunggu persetujuan admin untuk ditampilkan.');
                 
         } catch (\Exception $e) {
@@ -217,7 +217,7 @@ class EventController extends Controller
 
         $event->delete();
 
-        return redirect()->route('events.index')
+        return redirect()->route('informasi.events.index')
                         ->with('success', 'Event berhasil dihapus.');
     }
 }

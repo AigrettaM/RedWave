@@ -55,14 +55,16 @@ Route::get('/location/nearby/search', [LokasiController::class, 'publicNearby'])
 // ========================================
 Route::prefix('informasi')->name('informasi.')->group(function () {
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
-    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     
-    // Event creation (requires auth)
+    // Event creation (requires auth) - pindahkan ke atas sebelum route dengan parameter
     Route::middleware('auth')->group(function () {
         Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
         Route::post('/events', [EventController::class, 'store'])->name('events.store');
     });
+
+    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 });
+
 
 
 

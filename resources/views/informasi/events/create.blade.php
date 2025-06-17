@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-4xl mx-auto mt-20">
         {{-- Header --}}
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Ajukan Event Baru</h1>
@@ -34,7 +34,7 @@
 
         {{-- Form --}}
         <div class="bg-white shadow-lg rounded-lg p-6">
-            <form action="{{ route('events.store') }}" method="POST" enctype="multipart/form-data" id="eventForm">
+            <form action="{{ route('informasi.events.store') }}" method="POST" enctype="multipart/form-data" id="eventForm">
                 @csrf
 
                 {{-- Event Information --}}
@@ -304,7 +304,7 @@
 
                 {{-- Submit Buttons --}}
                 <div class="flex justify-between items-center pt-6 border-t">
-                    <a href="{{ route('events.index') }}" 
+                    <a href="{{ route('informasi.events.index') }}" 
                        class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
                         Batal
                     </a>
